@@ -1,136 +1,357 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Architect OS | The Clarity Engine</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Architect OS | Bee Well v21.0</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
     <style>
-        :root { --bg: #020202; --accent: #fbbf24; }
-        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-        .glass { background: rgba(255,255,255,0.01); backdrop-filter: blur(40px); border: 1px solid rgba(255,255,255,0.06); }
-        .bg-blob { position: fixed; width: 900px; height: 900px; filter: blur(160px); opacity: 0.08; z-index: -1; transition: 2s; border-radius: 50%; }
-        .mono { font-family: 'JetBrains Mono', monospace; }
-        .custom-scroll::-webkit-scrollbar { width: 3px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
-        .slide-up { animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+
+        :root {
+            /* System States */
+            --yellow: #facc15;  /* Static/Scattered */
+            --red: #ef4444;     /* Heat/Intensity */
+            --orange: #fb923c;  /* Threat/Grounding */
+            --purple: #8b5cf6;  /* Pressure/Overthinking */
+            --blue: #3b82f6;    /* Gravity/Shutdown */
+            --green: #10b981;   /* Flow/Regulated */
+            
+            --bg-base: #0a0a0c;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: #e2e2e7;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.5s ease;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+        }
+
+        /* State Glows */
+        .state-active-yellow { box-shadow: 0 0 40px -10px rgba(250, 204, 21, 0.2); border-color: var(--yellow); }
+        .state-active-red { box-shadow: 0 0 40px -10px rgba(239, 68, 68, 0.2); border-color: var(--red); }
+        .state-active-orange { box-shadow: 0 0 40px -10px rgba(251, 146, 60, 0.2); border-color: var(--orange); }
+        .state-active-purple { box-shadow: 0 0 40px -10px rgba(139, 92, 246, 0.2); border-color: var(--purple); }
+        .state-active-blue { box-shadow: 0 0 40px -10px rgba(59, 130, 246, 0.2); border-color: var(--blue); }
+        .state-active-green { box-shadow: 0 0 40px -10px rgba(16, 185, 129, 0.2); border-color: var(--green); }
+
+        /* The Governor Dial */
+        .governor-container { width: 120px; height: 120px; position: relative; }
+
+        /* HUD Animations */
+        @keyframes pulse-slow { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.6; } }
+        .hud-glow { animation: pulse-slow 4s infinite ease-in-out; }
+
+        .terminal-text { font-family: 'JetBrains Mono', monospace; }
+        
+        .tab-btn { opacity: 0.4; transition: 0.3s; border-bottom: 2px solid transparent; }
+        .tab-btn.active { opacity: 1; border-color: var(--green); color: var(--green); }
     </style>
 </head>
-<body class="p-4 md:p-12 min-h-screen custom-scroll">
+<body class="p-4 md:p-8">
 
-    <div id="blob1" class="bg-blob top-[-20%] left-[-15%] bg-indigo-900"></div>
-    <div id="blob2" class="bg-blob bottom-[-20%] right-[-15%] bg-amber-900"></div>
+    <div id="state-glow" class="fixed inset-0 pointer-events-none transition-all duration-1000 opacity-20"></div>
 
-    <div class="max-w-7xl mx-auto space-y-10">
-        <nav class="glass rounded-[3rem] p-6 flex flex-col xl:flex-row justify-between items-center gap-6 sticky top-6 z-50">
-            <div class="flex items-center gap-6">
-                <div id="state-indicator" class="w-6 h-6 rounded-full bg-yellow-400 shadow-[0_0_20px_#fbbf24] transition-all duration-1000"></div>
-                <h1 class="font-black tracking-tighter text-2xl uppercase italic leading-none">Architect <span class="opacity-20 not-italic text-sm">OS</span></h1>
+    <header class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-2xl font-extrabold tracking-tighter text-white">ARCHITECT <span class="text-green-500 text-sm font-mono ml-2">v21.0</span></h1>
+            <p class="text-xs terminal-text opacity-50">SYSTEM STATUS: <span id="sys-status">STABLE</span></p>
+        </div>
+        <div class="flex gap-4">
+            <button onclick="toggleSanctuary()" id="sanctuary-toggle" class="glass px-4 py-2 text-xs font-bold transition-all">SANCTUARY OFF</button>
+            <div class="governor-container">
+                <canvas id="govChart"></canvas>
+                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span id="gov-val" class="text-xs font-bold">70%</span>
+                    <span class="text-[8px] opacity-40">GOVERNOR</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="mb-8">
+        <h2 class="text-[10px] terminal-text opacity-40 uppercase mb-3 tracking-[0.2em]">Atmospheric Calibration</h2>
+        <div class="grid grid-cols-3 md:grid-cols-6 gap-3">
+            <button onclick="setState('yellow')" class="glass p-4 flex flex-col items-center gap-2 hover:bg-yellow-500/10 transition-all border-yellow-500/20">
+                <div class="w-2 h-2 rounded-full bg-yellow-400"></div>
+                <span class="text-[10px] font-bold">STATIC</span>
+            </button>
+            <button onclick="setState('red')" class="glass p-4 flex flex-col items-center gap-2 hover:bg-red-500/10 transition-all border-red-500/20">
+                <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                <span class="text-[10px] font-bold">HEAT</span>
+            </button>
+            <button onclick="setState('orange')" class="glass p-4 flex flex-col items-center gap-2 hover:bg-orange-500/10 transition-all border-orange-500/20">
+                <div class="w-2 h-2 rounded-full bg-orange-400"></div>
+                <span class="text-[10px] font-bold">THREAT</span>
+            </button>
+            <button onclick="setState('purple')" class="glass p-4 flex flex-col items-center gap-2 hover:bg-purple-500/10 transition-all border-purple-500/20">
+                <div class="w-2 h-2 rounded-full bg-purple-500"></div>
+                <span class="text-[10px] font-bold">PRESSURE</span>
+            </button>
+            <button onclick="setState('blue')" class="glass p-4 flex flex-col items-center gap-2 hover:bg-blue-500/10 transition-all border-blue-500/20">
+                <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                <span class="text-[10px] font-bold">GRAVITY</span>
+            </button>
+            <button onclick="setState('green')" class="glass p-4 flex flex-col items-center gap-2 hover:bg-green-500/10 transition-all border-green-500/20">
+                <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_10px_#10b981]"></div>
+                <span class="text-[10px] font-bold">FLOW</span>
+            </button>
+        </div>
+    </section>
+
+    <main class="grid md:grid-cols-3 gap-6">
+        <div class="md:col-span-2 flex flex-col gap-6">
+            <div id="guidance-panel" class="glass p-8 min-h-[200px] flex flex-col justify-center border-l-4 border-green-500">
+                <h3 id="guidance-title" class="text-2xl font-light mb-2">The Pilot is ready.</h3>
+                <p id="guidance-text" class="text-sm opacity-60 leading-relaxed">System calibrated for standard operation. Select an atmospheric state to begin a reset protocol.</p>
+                <div id="action-steps" class="mt-6 flex flex-wrap gap-2"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="glass p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xs font-bold tracking-widest uppercase">The Fox</h3>
+                        <span class="text-[10px] opacity-40 italic">One Main Objective</span>
+                    </div>
+                    <input type="text" id="fox-input" placeholder="Define the primary target..." class="bg-white/5 border border-white/10 w-full p-3 rounded-xl text-sm outline-none focus:border-green-500 transition-all mb-4">
+                    <div class="flex justify-between items-center">
+                        <label class="text-[10px] opacity-40">MVS (Minimum Viable Shift)</label>
+                        <button onclick="addMVS()" class="text-[10px] text-green-500">+ ADD STEP</button>
+                    </div>
+                    <div id="mvs-list" class="mt-2 space-y-2"></div>
+                </div>
+
+                <div class="glass p-6">
+                    <h3 class="text-xs font-bold tracking-widest uppercase mb-4">Integrity Log</h3>
+                    <div id="black-box" class="h-32 overflow-y-auto terminal-text text-[10px] space-y-1 opacity-60 scrollbar-hide">
+                        <div>[0.00] OS_INITIALIZED</div>
+                        <div>[0.01] KERNEL_LOAD_SUCCESS</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-4">
+            <div class="flex justify-around glass p-2">
+                <button onclick="switchTab('war')" class="tab-btn active text-[10px] font-bold py-2 px-4" id="btn-war">WAR ROOM</button>
+                <button onclick="switchTab('zion')" class="tab-btn text-[10px] font-bold py-2 px-4" id="btn-zion">ZION</button>
+                <button onclick="switchTab('audit')" class="tab-btn text-[10px] font-bold py-2 px-4" id="btn-audit">AUDIT</button>
             </div>
             
-            <div class="flex gap-10 text-[10px] font-black uppercase tracking-[0.4em] opacity-40 mono">
-                <button onclick="switchTab('library')" class="hover:text-amber-400 transition">01_Library</button>
-                <button onclick="switchTab('toolkit')" class="hover:text-amber-400 transition">02_Toolkit</button>
-                <button onclick="switchTab('resources')" class="hover:text-amber-400 transition">03_Resources</button>
-                <button onclick="switchTab('terminal')" class="hover:text-amber-400 transition">04_Terminal</button>
-            </div>
-        </nav>
+            <div id="archive-view" class="glass p-6 h-full min-h-[400px]">
+                </div>
+        </div>
+    </main>
 
-        <main id="app-viewport" class="min-h-[70vh]"></main>
+    <div id="system-voice" class="fixed bottom-8 right-8 pointer-events-none opacity-0 transition-all duration-500 flex items-center gap-4 bg-black/80 px-4 py-3 rounded-full border border-white/10 glass">
+        <div class="w-2 h-2 rounded-full bg-green-500 hud-glow"></div>
+        <span id="voice-text" class="text-xs font-medium italic opacity-80">System Check Complete.</span>
     </div>
 
     <script>
-        const ARCHITECT_DB = {
-            state: 'yellow',
-            tab: 'library',
-            
-            // WEAVING: Grounding Tool (from CSV/PDF)
-            toolkit: [
-                { phase: "DESCENT", step: "1. Horizon", action: "What is my current 'mental weather'?", purpose: "Map the landscape." },
-                { phase: "DESCENT", step: "2. Filter", action: "Is this noise (fear) or signal (need)?", purpose: "Isolate the true need." },
-                { phase: "DESCENT", step: "3. Pinpoint", action: "What is the one tiny, kind act I can do?", purpose: "Find the Fox." },
-                { phase: "ASCENT", step: "4. Why", action: "Is this reaction from the present or a past trigger?", purpose: "Identify root cause." },
-                { phase: "LOOP", step: "8. So What?", action: "What am I giving myself permission to stop doing?", purpose: "Strategic relief." }
-            ],
-
-            // WEAVING: Resources (from CSV)
-            resources: [
-                { cat: "Crisis", title: "988 Lifeline", desc: "Immediate emotional support.", link: "988" },
-                { cat: "ADHD", title: "NIMH Directory", desc: "Official clinical resources and mapping.", link: "https://nimh.nih.gov" },
-                { cat: "BPD", title: "DBT Skills", desc: "Top-down regulation tools.", link: "#" }
-            ],
-
-            // Books and Content
-            library: {
-                vol1: { title: "Architect OS", chapters: [{ id: 1, title: "Symptom Soup", content: "..." }] },
-                vol2: { title: "Journey to Zion", chapters: [{ id: 15, title: "The Snap", content: "..." }] }
-            }
+        /* ==========================================================================
+           📊 DATA ARCHITECTURE
+           ========================================================================== */
+        const APP_STATE = {
+            activeState: 'green',
+            sanctuary: false,
+            governor: 70,
+            fox: "",
+            mvs: [],
+            currentTab: 'war'
         };
 
-        function switchTab(t) { ARCHITECT_DB.tab = t; render(); }
+        const PROTOCOLS = {
+            yellow: { title: "Clear the Static", text: "ADHD/Scattered Focus detected. Reduce all sensory inputs. Put on headphones (Brown Noise). Clear the workspace physically.", actions: ["Headphones ON", "Close Tabs", "5-Min Tidy"] },
+            red: { title: "Cool the Heat", text: "High Emotional Intensity. The Amygdala is loud. Use cold water shock to the face immediately. Do not speak until the 90-second flush passes.", actions: ["Cold Water Splash", "90s Silence", "Box Breathing"] },
+            orange: { title: "Ground the Threat", text: "Hypervigilance/Threat response detected. Find 5 things you can see, 4 you can touch. Your body is safe in this room.", actions: ["5-4-3-2-1 Grounding", "Weighted Blanket", "Verify Safety"] },
+            purple: { title: "Relieve the Pressure", text: "Overthinking/Anxiety Spiral. Externalize the thoughts. The brain cannot process what it is trying to store. Write it down.", actions: ["Brain Dump", "Fact vs. Fear Check", "3-Deep Breaths"] },
+            blue: { title: "Resist the Gravity", text: "Shutdown/Depression. The battery is critically low. Do not aim for productivity. Aim for one tiny movement.", actions: ["Hydrate", "Stand Up Once", "Listen to 1 Song"] },
+            green: { title: "Maintain Flow", text: "System is regulated. Operate at the 70% Governor to preserve battery. Focus on the Fox.", actions: ["Start Pomodoro", "Check Battery", "Review Fox"] }
+        };
 
-        function render() {
-            const vp = document.getElementById('app-viewport');
+        const ZION_ANCHORS = [
+            "You are a Pilot, not the storm.",
+            "Fix the state, then take the step.",
+            "The 90-second chemical spike is temporary. Your sovereignty is permanent.",
+            "One pebble, one breath, one step.",
+            "The Architect builds for the storm, not for the sunshine."
+        ];
+
+        /* ==========================================================================
+           🛠️ SYSTEM CORE LOGIC
+           ========================================================================== */
+        
+        function setState(state) {
+            APP_STATE.activeState = state;
+            const p = PROTOCOLS[state];
             
-            if(ARCHITECT_DB.tab === 'toolkit') {
-                vp.innerHTML = `
-                    <div class="grid grid-cols-1 gap-4 slide-up">
-                        <div class="glass p-10 rounded-[3rem] mb-6">
-                            <h2 class="text-3xl font-black italic uppercase mb-2">Grounding Engine</h2>
-                            <p class="opacity-40 text-sm mono tracking-widest uppercase">The Descent and Ascent Protocol</p>
-                        </div>
-                        ${ARCHITECT_DB.toolkit.map(item => `
-                            <div class="glass p-6 rounded-3xl flex flex-col md:flex-row justify-between items-center gap-6 group hover:bg-white/5 transition">
-                                <div class="flex items-center gap-6">
-                                    <span class="text-[10px] mono font-bold opacity-20">${item.phase}</span>
-                                    <div>
-                                        <h4 class="text-lg font-bold group-hover:text-amber-400 transition">${item.step}</h4>
-                                        <p class="text-sm opacity-60 italic">"${item.action}"</p>
-                                    </div>
-                                </div>
-                                <div class="text-[10px] uppercase tracking-widest opacity-30">${item.purpose}</div>
-                            </div>
-                        `).join('')}
+            // UI Feedback
+            document.body.className = `p-4 md:p-8 state-active-${state}`;
+            document.getElementById('state-glow').style.background = `radial-gradient(circle at center, var(--${state}), transparent)`;
+            document.getElementById('guidance-title').innerText = p.title;
+            document.getElementById('guidance-text').innerText = p.text;
+            document.getElementById('sys-status').innerText = state.toUpperCase();
+            document.getElementById('sys-status').className = `text-${state}-500 ml-2 font-mono`;
+            
+            // Load Reset Actions
+            const container = document.getElementById('action-steps');
+            container.innerHTML = p.actions.map(a => `<button onclick="logEvent('RESET_STEP_COMPLETE: ${a}')" class="px-3 py-1 bg-white/5 rounded-full text-[10px] border border-white/10 hover:bg-white/10 transition-all">${a}</button>`).join('');
+
+            logEvent(`STATE_CHANGE: ${state.toUpperCase()}`);
+            triggerVoice(`Transitioning to ${state.toUpperCase()} protocol.`);
+            
+            if (state !== 'green') {
+                updateGovernor(40); // Auto-drop energy during stress
+            } else {
+                updateGovernor(70);
+            }
+        }
+
+        function updateGovernor(val) {
+            APP_STATE.governor = val;
+            document.getElementById('gov-val').innerText = val + '%';
+            govChart.data.datasets[0].data = [val, 100 - val];
+            govChart.data.datasets[0].backgroundColor[0] = val > 75 ? '#ef4444' : '#10b981';
+            govChart.update();
+        }
+
+        function toggleSanctuary() {
+            APP_STATE.sanctuary = !APP_STATE.sanctuary;
+            const btn = document.getElementById('sanctuary-toggle');
+            if(APP_STATE.sanctuary) {
+                document.body.style.filter = "contrast(0.9) brightness(0.8) saturate(0.5)";
+                btn.innerText = "SANCTUARY ON";
+                btn.classList.add('bg-blue-500/20', 'text-blue-400');
+                triggerVoice("Sanctuary Mode engaged. Low stimulus active.");
+            } else {
+                document.body.style.filter = "none";
+                btn.innerText = "SANCTUARY OFF";
+                btn.classList.remove('bg-blue-500/20', 'text-blue-400');
+            }
+        }
+
+        function logEvent(msg) {
+            const bb = document.getElementById('black-box');
+            const time = ((performance.now() - startTime) / 1000).toFixed(2);
+            const div = document.createElement('div');
+            div.innerText = `[${time}] ${msg}`;
+            bb.prepend(div);
+        }
+
+        function triggerVoice(text) {
+            const v = document.getElementById('system-voice');
+            const t = document.getElementById('voice-text');
+            t.innerText = text;
+            v.style.opacity = "1";
+            v.style.transform = "translateY(0)";
+            setTimeout(() => {
+                v.style.opacity = "0";
+                v.style.transform = "translateY(10px)";
+            }, 3000);
+        }
+
+        function switchTab(tab) {
+            APP_STATE.currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`btn-${tab}`).classList.add('active');
+            renderArchive();
+        }
+
+        function renderArchive() {
+            const view = document.getElementById('archive-view');
+            if(APP_STATE.currentTab === 'zion') {
+                view.innerHTML = `
+                    <h3 class="text-xs font-bold mb-4 opacity-40">ZION ANCHORS</h3>
+                    <div class="space-y-4">
+                        ${ZION_ANCHORS.map(a => `<div class="p-4 glass italic text-sm border-l-2 border-white/10">${a}</div>`).join('')}
                     </div>
                 `;
-            }
-
-            if(ARCHITECT_DB.tab === 'resources') {
-                vp.innerHTML = `
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 slide-up">
-                        ${ARCHITECT_DB.resources.map(res => `
-                            <div class="glass p-8 rounded-[2.5rem] hover:border-white/20 transition group">
-                                <span class="text-[9px] font-black uppercase tracking-[0.3em] opacity-30">${res.cat}</span>
-                                <h3 class="text-xl font-black italic uppercase mt-2 mb-4 group-hover:text-indigo-400">${res.title}</h3>
-                                <p class="text-sm opacity-40 mb-6 leading-relaxed">${res.desc}</p>
-                                <a href="${res.link}" class="text-[10px] font-black uppercase tracking-widest opacity-20 hover:opacity-100 transition underline underline-offset-8">Access Portal →</a>
-                            </div>
-                        `).join('')}
+            } else if(APP_STATE.currentTab === 'audit') {
+                view.innerHTML = `
+                    <h3 class="text-xs font-bold mb-4 opacity-40">DAILY AUDIT</h3>
+                    <div class="space-y-2">
+                        <button class="w-full glass p-3 text-xs text-left" onclick="alert('Checking Core Needs: Hydration, Air, Light...')">BIOLOGICAL CHECK</button>
+                        <button class="w-full glass p-3 text-xs text-left" onclick="alert('Checking State: Static, Heat, Gravity...')">ATMOSPHERIC CHECK</button>
                     </div>
                 `;
-            }
-
-            if(ARCHITECT_DB.tab === 'library') {
-                vp.innerHTML = `<div class="p-20 text-center opacity-20 tracking-widest uppercase">Library Volumes Loaded. Select Toolkit or Resources for Data Deployment.</div>`;
-            }
-
-            if(ARCHITECT_DB.tab === 'terminal') {
-                vp.innerHTML = `
-                    <div class="glass rounded-[3.5rem] p-12 min-h-[500px] flex flex-col mono text-xs">
-                        <div class="flex-1 overflow-y-auto space-y-2 opacity-60" id="t-out">
-                            <div class="text-amber-500">[SYNC] Grounding CSV Injected Successfully.</div>
-                            <div class="text-indigo-400">[SYNC] Resource Structure Mapped.</div>
-                            <div>System Ready for High-Use Interaction.</div>
-                        </div>
-                        <input type="text" class="bg-transparent border-none outline-none w-full uppercase mt-8 pt-8 border-t border-white/5 tracking-[0.4em]" placeholder="PILOT_CMD >">
-                    </div>
+            } else {
+                view.innerHTML = `
+                    <h3 class="text-xs font-bold mb-4 opacity-40">WAR ROOM</h3>
+                    <p class="text-[10px] opacity-60 mb-4">Strategic overview of active projects and state-history.</p>
+                    <div class="h-24 bg-white/5 rounded-xl border border-white/5 flex items-center justify-center italic text-[10px] opacity-40">Wave Telemetry Loading...</div>
                 `;
             }
         }
 
-        render();
+        function addMVS() {
+            const task = prompt("Enter a 2-minute non-negotiable step:");
+            if (task) {
+                APP_STATE.mvs.push(task);
+                renderMVS();
+            }
+        }
+
+        function renderMVS() {
+            const list = document.getElementById('mvs-list');
+            list.innerHTML = APP_STATE.mvs.map((m, i) => `
+                <div class="flex items-center gap-2 p-2 glass text-xs group">
+                    <input type="checkbox" class="accent-green-500">
+                    <span class="flex-grow">${m}</span>
+                    <button onclick="APP_STATE.mvs.splice(${i},1); renderMVS();" class="opacity-0 group-hover:opacity-40"><i class="fas fa-times"></i></button>
+                </div>
+            `).join('');
+        }
+
+        /* ==========================================================================
+           🚀 INITIALIZATION
+           ========================================================================== */
+        const startTime = performance.now();
+        const ctxGov = document.getElementById('govChart').getContext('2d');
+        const govChart = new Chart(ctxGov, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [70, 30],
+                    backgroundColor: ['#10b981', '#1f1f23'],
+                    borderWidth: 0,
+                    circumference: 180,
+                    rotation: 270
+                }]
+            },
+            options: { cutout: '85%', plugins: { legend: { display: false }, tooltip: { enabled: false } } }
+        });
+
+        window.onload = () => {
+            renderArchive();
+            setState('green');
+            logEvent("SYSTEM_READY");
+            setInterval(() => {
+                const randomAnchor = ZION_ANCHORS[Math.floor(Math.random() * ZION_ANCHORS.length)];
+                triggerVoice(randomAnchor);
+            }, 60000); // Hourly sanity check-in
+        };
+
+        // GLOBAL BLACK BOX ERROR HANDLER
+        window.onerror = function(msg, url, line) {
+            logEvent(`CRITICAL_GLITCH: ${msg} [Line: ${line}]`);
+            return false;
+        };
     </script>
 </body>
 </html>
