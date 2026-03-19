@@ -1,19 +1,156 @@
-/* =========================
-   LAYER 1: SYSTEM CORE
-   (Safe Extensions Only)
-   ========================= */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-// --- SAFE ELEMENT GETTER (prevents crashes) ---
-function $(id) {
-    const el = document.getElementById(id);
-    if (!el) {
-        console.warn(`Missing element: ${id}`);
+<title>Architect System</title>
+
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #0f172a;
+        color: white;
     }
-    return el;
+
+    .container {
+        padding: 20px;
+    }
+
+    button {
+        padding: 10px 20px;
+        margin: 5px;
+        border: none;
+        cursor: pointer;
+        border-radius: 6px;
+    }
+
+    .green { background: #10b981; color: black; }
+    .red { background: #ef4444; }
+    .blue { background: #3b82f6; }
+
+    .panel {
+        background: rgba(255,255,255,0.05);
+        padding: 15px;
+        margin-top: 15px;
+        border-radius: 10px;
+    }
+
+    input {
+        width: 100%;
+        padding: 10px;
+        margin-top: 10px;
+        border-radius: 6px;
+        border: none;
+        background: rgba(255,255,255,0.1);
+        color: white;
+    }
+
+    #hud {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: black;
+        padding: 10px 20px;
+        border-radius: 10px;
+        opacity: 0;
+        transition: 0.3s;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>ARCHITECT SYSTEM</h1>
+
+    <div class="panel">
+        <h3>State Control</h3>
+        <button class="green" onclick="activateState('green')">Green</button>
+        <button class="blue" onclick="activateState('blue')">Blue</button>
+        <button class="red" onclick="activateState('red')">Red</button>
+    </div>
+
+    <div class="panel">
+        <h3>MVS (Minimum Viable Step)</h3>
+        <input id="mvsInput" placeholder="Enter your next step...">
+        <button class="green" onclick="saveMVS()">Save MVS</button>
+    </div>
+
+    <div class="panel">
+        <h3>Saved MVS</h3>
+        <div id="mvsDisplay">None</div>
+    </div>
+
+</div>
+
+<div id="hud"></div>
+
+<script>
+
+/* =========================
+   CORE SYSTEM
+========================= */
+
+let SYSTEM = {
+    state: "blue",
+    mvs: ""
+};
+
+function activateState(state) {
+    SYSTEM.state = state;
+    showHUD("STATE: " + state.toUpperCase());
 }
 
-// --- SAFE LOCAL STORAGE ---
-const Storage = {
+function showHUD(text) {
+    const hud = document.getElementById("hud");
+    hud.innerText = text;
+    hud.style.opacity = 1;
+
+    setTimeout(() => {
+        hud.style.opacity = 0;
+    }, 2000);
+}
+
+function saveMVS() {
+    const input = document.getElementById("mvsInput").value;
+    if (!input) return;
+
+    SYSTEM.mvs = input;
+    localStorage.setItem("mvs", input);
+
+    renderMVS();
+    showHUD("MVS SAVED");
+}
+
+function renderMVS() {
+    const saved = localStorage.getItem("mvs");
+    document.getElementById("mvsDisplay").innerText = saved || "None";
+}
+
+/* =========================
+   INIT
+========================= */
+
+window.onload = () => {
+    renderMVS();
+};
+<script>
+
+/* =========================
+   PART 2 — STABILITY CORE
+========================= */
+
+// Safe getter (prevents crashes)
+function $(id) {
+    return document.getElementById(id);
+}
+
+// Safe storage
+const Store = {
     get(key, fallback = null) {
         try {
             return JSON.parse(localStorage.getItem(key)) ?? fallback;
@@ -22,81 +159,1055 @@ const Storage = {
         }
     },
     set(key, value) {
-        try {
-            localStorage.setItem(key, JSON.stringify(value));
-        } catch (e) {
-            console.error("Storage failed:", e);
-        }
+        localStorage.setItem(key, JSON.stringify(value));
     }
 };
 
-// --- GLOBAL SYSTEM STATE (non-destructive) ---
+// Global system extension (non-breaking)
 window.ARCH = window.ARCH || {
-    version: "1.0.0",
-    state: "blue",
-    lastAction: null,
-    overload: false
+    version: "1.0",
+    overload: false,
+    lastAction: 0
 };
 
-// --- SAFE EVENT WRAPPER ---
-function safeRun(fn, label = "anonymous") {
-    try {
-        fn();
-    } catch (e) {
-        console.error(`Error in ${label}:`, e);
-    }
-}
-
-// --- GLOBAL ERROR LISTENER (prevents silent failure) ---
-window.addEventListener("error", (e) => {
-    console.error("GLOBAL ERROR:", e.message);
-});
-
-// --- HEARTBEAT (light system monitor) ---
-setInterval(() => {
-    if (window.ARCH.overload) return;
-
-    console.log(
-        `%cSYSTEM OK | State: ${window.ARCH.state}`,
-        "color:#10b981;font-weight:bold;"
-    );
-}, 60000);
-
-// --- HOOK INTO EXISTING STATE SYSTEM ---
-const _oldActivateState = activateState;
-activateState = function (colorId) {
-    window.ARCH.state = colorId;
+// Wrap existing activateState safely
+const oldActivateState = activateState;
+activateState = function(state) {
     window.ARCH.lastAction = Date.now();
 
-    safeRun(() => _oldActivateState(colorId), "activateState");
+    try {
+        oldActivateState(state);
+    } catch (e) {
+        console.error("State error:", e);
+    }
 };
 
 // --- OVERLOAD DETECTION ---
-let actionSpam = [];
+let clicks = [];
 
 document.addEventListener("click", () => {
     const now = Date.now();
-    actionSpam.push(now);
+    clicks.push(now);
 
     // keep last 2 seconds
-    actionSpam = actionSpam.filter(t => now - t < 2000);
+    clicks = clicks.filter(t => now - t < 2000);
 
-    if (actionSpam.length > 15) {
+    if (clicks.length > 15) {
         window.ARCH.overload = true;
-        console.warn("⚠️ OVERLOAD DETECTED");
-
-        if (typeof triggerHUD === "function") {
-            triggerHUD("SYSTEM OVERLOAD: SWITCH TO SANCTUARY");
-        }
+        showHUD("OVERLOAD DETECTED - SLOW DOWN");
     }
 });
 
-// --- AUTO RECOVERY ---
+// --- AUTO RESET OVERLOAD ---
 setInterval(() => {
     if (window.ARCH.overload) {
-        actionSpam = [];
+        clicks = [];
         window.ARCH.overload = false;
-
-        console.log("%cSYSTEM RECOVERED", "color:#3b82f6;font-weight:bold;");
+        console.log("System recovered");
     }
-}, 10000);
+}, 8000);
+
+// --- AUTO SAVE MVS (REAL-TIME) ---
+$("mvsInput").addEventListener("input", (e) => {
+    Store.set("mvs", e.target.value);
+});
+
+// --- IMPROVED RENDER ---
+const oldRender = renderMVS;
+renderMVS = function() {
+    try {
+        const saved = Store.get("mvs");
+        $("mvsDisplay").innerText = saved || "None";
+    } catch (e) {
+        console.error("Render error:", e);
+        oldRender();
+    }
+};
+
+// --- HEARTBEAT ---
+setInterval(() => {
+    console.log("SYSTEM RUNNING | STATE:", SYSTEM.state);
+}, 60000);
+
+</script>
+   /* =========================
+   PART 3 — TASK ENGINE
+========================= */
+
+// Task system
+window.TASKS = Store.get("tasks", []);
+
+// Save tasks
+function saveTasks() {
+    Store.set("tasks", TASKS);
+}
+
+// Add task from MVS
+function commitMVS() {
+    const text = Store.get("mvs");
+    if (!text) return;
+
+    const task = {
+        id: Date.now(),
+        text,
+        done: false
+    };
+
+    TASKS.unshift(task);
+    saveTasks();
+    renderTasks();
+
+    showHUD("TASK COMMITTED");
+}
+
+// Complete task
+function completeTask(id) {
+    const task = TASKS.find(t => t.id === id);
+    if (!task) return;
+
+    task.done = true;
+    saveTasks();
+    renderTasks();
+
+    showHUD("TASK COMPLETE");
+}
+
+// Delete task
+function deleteTask(id) {
+    TASKS = TASKS.filter(t => t.id !== id);
+    saveTasks();
+    renderTasks();
+}
+
+// Render task list
+function renderTasks() {
+    let container = document.getElementById("taskList");
+
+    // Create container if not exists
+    if (!container) {
+        container = document.createElement("div");
+        container.id = "taskList";
+        container.className = "panel";
+        container.innerHTML = "<h3>Execution Queue</h3>";
+        document.querySelector(".container").appendChild(container);
+    }
+
+    const list = TASKS.map(t => `
+        <div style="margin-top:10px; padding:10px; background:rgba(255,255,255,0.05); border-radius:6px;">
+            <span style="${t.done ? 'text-decoration:line-through; opacity:0.5;' : ''}">
+                ${t.text}
+            </span>
+            <div style="margin-top:5px;">
+                ${!t.done ? `<button onclick="completeTask(${t.id})" class="green">Done</button>` : ""}
+                <button onclick="deleteTask(${t.id})" class="red">X</button>
+            </div>
+        </div>
+    `).join("");
+
+    container.innerHTML = "<h3>Execution Queue</h3>" + (list || "<p>No tasks</p>");
+}
+
+// Momentum feedback loop
+function momentumCheck() {
+    const doneCount = TASKS.filter(t => t.done).length;
+
+    if (doneCount > 0 && doneCount % 3 === 0) {
+        showHUD("MOMENTUM BUILDING");
+    }
+}
+
+// Hook into completion
+const oldComplete = completeTask;
+completeTask = function(id) {
+    oldComplete(id);
+    momentumCheck();
+};
+
+// Add button to UI
+function addCommitButton() {
+    const panel = document.querySelectorAll(".panel")[1];
+
+    if (!document.getElementById("commitBtn")) {
+        const btn = document.createElement("button");
+        btn.id = "commitBtn";
+        btn.className = "blue";
+        btn.innerText = "Commit to Task";
+        btn.onclick = commitMVS;
+
+        panel.appendChild(btn);
+    }
+}
+
+// Init extension
+const oldInitPart3 = window.onload;
+window.onload = () => {
+    if (oldInitPart3) oldInitPart3();
+
+    renderTasks();
+    addCommitButton();
+};
+   /* =========================
+   PART 4 — REGULATION SYSTEM
+========================= */
+
+// --- PANIC MODE UI ---
+function createPanicUI() {
+    if (document.getElementById("panicOverlay")) return;
+
+    const overlay = document.createElement("div");
+    overlay.id = "panicOverlay";
+    overlay.style.position = "fixed";
+    overlay.style.top = 0;
+    overlay.style.left = 0;
+    overlay.style.width = "100%";
+    overlay.style.height = "100%";
+    overlay.style.background = "black";
+    overlay.style.display = "none";
+    overlay.style.flexDirection = "column";
+    overlay.style.alignItems = "center";
+    overlay.style.justifyContent = "center";
+    overlay.style.zIndex = 9999;
+
+    overlay.innerHTML = `
+        <h1 style="color:white;">PAUSE</h1>
+        <p style="opacity:0.6;">You are safe. Regulate first.</p>
+        <div id="breathCircle" style="
+            width:120px;
+            height:120px;
+            border-radius:50%;
+            background:#3b82f6;
+            margin:20px;
+            transition: all 2s ease;
+        "></div>
+        <button onclick="stopPanic()" class="green">Exit</button>
+    `;
+
+    document.body.appendChild(overlay);
+}
+
+// --- START PANIC ---
+function triggerPanic() {
+    const overlay = document.getElementById("panicOverlay");
+    overlay.style.display = "flex";
+
+    startBreathing();
+}
+
+// --- STOP PANIC ---
+function stopPanic() {
+    const overlay = document.getElementById("panicOverlay");
+    overlay.style.display = "none";
+}
+
+// --- BREATHING LOOP ---
+let breathInterval;
+
+function startBreathing() {
+    const circle = document.getElementById("breathCircle");
+
+    let inhale = true;
+
+    clearInterval(breathInterval);
+
+    breathInterval = setInterval(() => {
+        if (!circle) return;
+
+        if (inhale) {
+            circle.style.transform = "scale(1.5)";
+        } else {
+            circle.style.transform = "scale(1)";
+        }
+
+        inhale = !inhale;
+    }, 2000);
+}
+
+// --- SANCTUARY MODE ---
+let sanctuary = false;
+
+function toggleSanctuary() {
+    sanctuary = !sanctuary;
+
+    if (sanctuary) {
+        document.body.style.filter = "grayscale(100%) brightness(70%)";
+        showHUD("SANCTUARY MODE");
+    } else {
+        document.body.style.filter = "none";
+        showHUD("NORMAL MODE");
+    }
+}
+
+// --- QUICK ACTION BAR ---
+function createQuickBar() {
+    if (document.getElementById("quickBar")) return;
+
+    const bar = document.createElement("div");
+    bar.id = "quickBar";
+    bar.style.position = "fixed";
+    bar.style.top = "10px";
+    bar.style.right = "10px";
+    bar.style.display = "flex";
+    bar.style.gap = "5px";
+    bar.style.zIndex = 9999;
+
+    bar.innerHTML = `
+        <button onclick="triggerPanic()" class="red">PANIC</button>
+        <button onclick="toggleSanctuary()" class="blue">SANCT</button>
+    `;
+
+    document.body.appendChild(bar);
+}
+
+// --- KEYBOARD SHORTCUTS ---
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") triggerPanic();
+});
+
+// --- INIT EXTENSION ---
+const oldInitPart4 = window.onload;
+window.onload = () => {
+    if (oldInitPart4) oldInitPart4();
+
+    createPanicUI();
+    createQuickBar();
+};
+   /* =========================
+   PART 5 — IDENTITY + HABITS
+========================= */
+
+// --- HABIT SYSTEM ---
+window.HABITS = Store.get("habits", {
+    sleep: false,
+    water: false,
+    sunlight: false,
+    mvs: false
+});
+
+function toggleHabit(id) {
+    HABITS[id] = !HABITS[id];
+    Store.set("habits", HABITS);
+    renderHabits();
+    calculateIntegrity();
+}
+
+function renderHabits() {
+    let panel = document.getElementById("habitPanel");
+
+    if (!panel) {
+        panel = document.createElement("div");
+        panel.id = "habitPanel";
+        panel.className = "panel";
+        document.querySelector(".container").appendChild(panel);
+    }
+
+    panel.innerHTML = `
+        <h3>Integrity System</h3>
+        ${Object.keys(HABITS).map(h => `
+            <div style="margin-top:8px;">
+                <label>
+                    <input type="checkbox" ${HABITS[h] ? "checked" : ""} onclick="toggleHabit('${h}')">
+                    ${h.toUpperCase()}
+                </label>
+            </div>
+        `).join("")}
+        <div style="margin-top:10px;">
+            Score: <span id="integrityScore">0</span>%
+        </div>
+    `;
+}
+
+// --- INTEGRITY SCORE ---
+function calculateIntegrity() {
+    const values = Object.values(HABITS);
+    const score = Math.floor((values.filter(v => v).length / values.length) * 100);
+
+    const el = document.getElementById("integrityScore");
+    if (el) el.innerText = score;
+
+    if (score < 50) {
+        showHUD("LOW INTEGRITY");
+    }
+}
+
+// --- IDENTITY ANCHORS ---
+window.ANCHORS = Store.get("anchors", [
+    "I am safe right now.",
+    "I only need to complete one small step.",
+    "I do not need to solve everything today."
+]);
+
+function renderAnchors() {
+    let panel = document.getElementById("anchorPanel");
+
+    if (!panel) {
+        panel = document.createElement("div");
+        panel.id = "anchorPanel";
+        panel.className = "panel";
+        document.querySelector(".container").appendChild(panel);
+    }
+
+    panel.innerHTML = `
+        <h3>Identity Anchors</h3>
+        ${ANCHORS.map((a, i) => `
+            <div style="margin-top:8px; font-style:italic;">
+                "${a}"
+                <button onclick="deleteAnchor(${i})" class="red" style="margin-left:10px;">X</button>
+            </div>
+        `).join("")}
+        <button onclick="addAnchor()" class="blue" style="margin-top:10px;">Add Anchor</button>
+    `;
+}
+
+function addAnchor() {
+    const text = prompt("Enter new anchor:");
+    if (!text) return;
+
+    ANCHORS.unshift(text);
+    Store.set("anchors", ANCHORS);
+    renderAnchors();
+}
+
+function deleteAnchor(i) {
+    ANCHORS.splice(i, 1);
+    Store.set("anchors", ANCHORS);
+    renderAnchors();
+}
+
+// --- INTELLIGENCE LAYER ---
+function systemInsight() {
+    const done = TASKS.filter(t => t.done).length;
+    const total = TASKS.length;
+
+    if (total === 0) return;
+
+    if (done / total < 0.3) {
+        showHUD("TOO MUCH LOAD — REDUCE TASK SIZE");
+    } else if (done / total > 0.7) {
+        showHUD("HIGH PERFORMANCE STATE");
+    }
+}
+
+// --- AUTO CHECK LOOP ---
+setInterval(systemInsight, 15000);
+
+// --- EXTEND INIT ---
+const oldInitPart5 = window.onload;
+window.onload = () => {
+    if (oldInitPart5) oldInitPart5();
+
+    renderHabits();
+    calculateIntegrity();
+    renderAnchors();
+};
+       /* =========================
+   PART 6 — ANALYTICS + MEMORY
+========================= */
+
+// --- SESSION LOGGING ---
+window.LOGS = Store.get("logs", []);
+
+function logEvent(type, data = {}) {
+    const entry = {
+        type,
+        data,
+        time: new Date().toISOString()
+    };
+
+    LOGS.unshift(entry);
+    if (LOGS.length > 100) LOGS.pop();
+
+    Store.set("logs", LOGS);
+}
+
+// Hook into key systems
+const _saveMVS = saveMVS;
+saveMVS = function () {
+    _saveMVS();
+    logEvent("mvs_saved", { text: SYSTEM.mvs });
+};
+
+const _commitMVS = commitMVS;
+commitMVS = function () {
+    _commitMVS();
+    logEvent("task_created");
+};
+
+const _completeTask2 = completeTask;
+completeTask = function (id) {
+    _completeTask2(id);
+    logEvent("task_completed");
+};
+
+// --- ANALYTICS PANEL ---
+function renderAnalytics() {
+    let panel = document.getElementById("analyticsPanel");
+
+    if (!panel) {
+        panel = document.createElement("div");
+        panel.id = "analyticsPanel";
+        panel.className = "panel";
+        document.querySelector(".container").appendChild(panel);
+    }
+
+    const tasksDone = LOGS.filter(l => l.type === "task_completed").length;
+    const tasksCreated = LOGS.filter(l => l.type === "task_created").length;
+
+    const mvsCount = LOGS.filter(l => l.type === "mvs_saved").length;
+
+    panel.innerHTML = `
+        <h3>System Analytics</h3>
+        <p>Tasks Created: ${tasksCreated}</p>
+        <p>Tasks Completed: ${tasksDone}</p>
+        <p>MVS Set: ${mvsCount}</p>
+    `;
+}
+
+// --- MEMORY ENGINE (pattern detection) ---
+function analyzeBehavior() {
+    if (LOGS.length < 10) return;
+
+    const last10 = LOGS.slice(0, 10);
+
+    const completions = last10.filter(l => l.type === "task_completed").length;
+
+    if (completions === 0) {
+        showHUD("STALL DETECTED — SHRINK TASK");
+    }
+
+    if (completions >= 5) {
+        showHUD("FLOW STATE DETECTED");
+    }
+}
+
+// --- LOOP ---
+setInterval(() => {
+    renderAnalytics();
+    analyzeBehavior();
+}, 20000);
+
+// --- COMMAND CONSOLE ---
+function createConsole() {
+    if (document.getElementById("commandBox")) return;
+
+    const box = document.createElement("input");
+    box.id = "commandBox";
+    box.placeholder = "Type command (/panic, /clear, /reset)...";
+    box.style.position = "fixed";
+    box.style.bottom = "10px";
+    box.style.left = "10px";
+    box.style.padding = "10px";
+    box.style.zIndex = 9999;
+
+    box.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            handleCommand(box.value);
+            box.value = "";
+        }
+    });
+
+    document.body.appendChild(box);
+}
+
+// --- COMMAND HANDLER ---
+function handleCommand(cmd) {
+    cmd = cmd.toLowerCase();
+
+    if (cmd === "/panic") triggerPanic();
+
+    if (cmd === "/clear") {
+        TASKS = [];
+        saveTasks();
+        renderTasks();
+        showHUD("TASKS CLEARED");
+    }
+
+    if (cmd === "/reset") {
+        localStorage.clear();
+        location.reload();
+    }
+
+    if (cmd === "/focus") {
+        toggleSanctuary();
+    }
+}
+
+// --- DAILY RESET ---
+function dailyResetCheck() {
+    const last = Store.get("lastReset");
+    const today = new Date().toDateString();
+
+    if (last !== today) {
+        Store.set("habits", {
+            sleep: false,
+            water: false,
+            sunlight: false,
+            mvs: false
+        });
+
+        Store.set("lastReset", today);
+    }
+}
+
+// --- EXTEND INIT ---
+const oldInitPart6 = window.onload;
+window.onload = () => {
+    if (oldInitPart6) oldInitPart6();
+
+    createConsole();
+    renderAnalytics();
+    dailyResetCheck();
+};
+       /* =========================
+   PART 7 — FINAL FORM UI
+========================= */
+
+// --- GLOBAL MODE ---
+window.MODE = "normal"; // normal | focus | god
+
+function setMode(mode) {
+    MODE = mode;
+
+    if (mode === "focus") {
+        document.body.style.filter = "grayscale(100%) contrast(120%)";
+        showHUD("FOCUS MODE");
+    }
+
+    if (mode === "god") {
+        document.body.style.background = "#000";
+        document.body.style.color = "#f97316";
+        showHUD("GOD MODE");
+    }
+
+    if (mode === "normal") {
+        document.body.style = "";
+        showHUD("NORMAL MODE");
+    }
+}
+
+// --- MODE SWITCHER UI ---
+function createModeSwitcher() {
+    if (document.getElementById("modeSwitch")) return;
+
+    const wrap = document.createElement("div");
+    wrap.id = "modeSwitch";
+    wrap.style.position = "fixed";
+    wrap.style.bottom = "60px";
+    wrap.style.right = "10px";
+    wrap.style.display = "flex";
+    wrap.style.gap = "5px";
+    wrap.style.zIndex = 9999;
+
+    wrap.innerHTML = `
+        <button onclick="setMode('normal')" class="blue">N</button>
+        <button onclick="setMode('focus')" class="green">F</button>
+        <button onclick="setMode('god')" class="red">G</button>
+    `;
+
+    document.body.appendChild(wrap);
+}
+
+// --- PROGRESS BAR ---
+function createProgressBar() {
+    if (document.getElementById("progressBar")) return;
+
+    const bar = document.createElement("div");
+    bar.id = "progressBar";
+    bar.style.position = "fixed";
+    bar.style.top = 0;
+    bar.style.left = 0;
+    bar.style.height = "4px";
+    bar.style.background = "#10b981";
+    bar.style.width = "0%";
+    bar.style.zIndex = 9999;
+
+    document.body.appendChild(bar);
+}
+
+// --- UPDATE PROGRESS ---
+function updateProgress() {
+    const total = TASKS.length;
+    const done = TASKS.filter(t => t.done).length;
+
+    const percent = total ? (done / total) * 100 : 0;
+
+    const bar = document.getElementById("progressBar");
+    if (bar) {
+        bar.style.width = percent + "%";
+    }
+}
+
+// Hook into task completion
+const _completeTask3 = completeTask;
+completeTask = function(id) {
+    _completeTask3(id);
+    updateProgress();
+};
+
+// Hook into task creation
+const _commitMVS2 = commitMVS;
+commitMVS = function() {
+    _commitMVS2();
+    updateProgress();
+};
+
+// --- AUTO FOCUS MODE ---
+function autoFocusCheck() {
+    if (TASKS.length > 5 && MODE !== "focus") {
+        showHUD("TOO MANY TASKS — ENTER FOCUS MODE");
+    }
+}
+
+setInterval(autoFocusCheck, 15000);
+
+// --- EXPORT DATA ---
+function exportData() {
+    const data = {
+        tasks: TASKS,
+        habits: HABITS,
+        logs: LOGS,
+        anchors: ANCHORS
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json"
+    });
+
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "architect-data.json";
+    a.click();
+}
+
+// --- IMPORT DATA ---
+function importData() {
+    const input = document.createElement("input");
+    input.type = "file";
+
+    input.onchange = e => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+
+        reader.onload = () => {
+            const data = JSON.parse(reader.result);
+
+            if (data.tasks) TASKS = data.tasks;
+            if (data.habits) Store.set("habits", data.habits);
+            if (data.logs) Store.set("logs", data.logs);
+            if (data.anchors) Store.set("anchors", data.anchors);
+
+            location.reload();
+        };
+
+        reader.readAsText(file);
+    };
+
+    input.click();
+}
+
+// --- DATA BUTTONS ---
+function createDataButtons() {
+    if (document.getElementById("dataBtns")) return;
+
+    const wrap = document.createElement("div");
+    wrap.id = "dataBtns";
+    wrap.style.position = "fixed";
+    wrap.style.bottom = "110px";
+    wrap.style.right = "10px";
+    wrap.style.display = "flex";
+    wrap.style.flexDirection = "column";
+    wrap.style.gap = "5px";
+    wrap.style.zIndex = 9999;
+
+    wrap.innerHTML = `
+        <button onclick="exportData()" class="green">EXPORT</button>
+        <button onclick="importData()" class="blue">IMPORT</button>
+    `;
+
+    document.body.appendChild(wrap);
+}
+
+// --- ENHANCED HUD (STACKING) ---
+let hudQueue = [];
+let hudActive = false;
+
+function showHUDStack(text) {
+    hudQueue.push(text);
+    if (!hudActive) processHUD();
+}
+
+function processHUD() {
+    if (hudQueue.length === 0) {
+        hudActive = false;
+        return;
+    }
+
+    hudActive = true;
+
+    const text = hudQueue.shift();
+    const hud = document.getElementById("hud");
+
+    hud.innerText = text;
+    hud.style.opacity = 1;
+
+    setTimeout(() => {
+        hud.style.opacity = 0;
+        setTimeout(processHUD, 500);
+    }, 2000);
+}
+
+// Replace old HUD
+showHUD = showHUDStack;
+
+// --- EXTEND INIT ---
+const oldInitPart7 = window.onload;
+window.onload = () => {
+    if (oldInitPart7) oldInitPart7();
+
+    createModeSwitcher();
+    createProgressBar();
+    createDataButtons();
+    updateProgress();
+};
+       /* =========================
+   PART 8 — PWA / OFFLINE
+========================= */
+
+// --- REGISTER SERVICE WORKER ---
+function registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
+        const swCode = `
+            const CACHE = "architect-cache-v1";
+
+            self.addEventListener("install", e => {
+                e.waitUntil(
+                    caches.open(CACHE).then(cache => {
+                        return cache.addAll(["./"]);
+                    })
+                );
+            });
+
+            self.addEventListener("fetch", e => {
+                e.respondWith(
+                    caches.match(e.request).then(res => {
+                        return res || fetch(e.request);
+                    })
+                );
+            });
+        `;
+
+        const blob = new Blob([swCode], { type: "application/javascript" });
+        const swURL = URL.createObjectURL(blob);
+
+        navigator.serviceWorker.register(swURL)
+            .then(() => console.log("Service Worker Registered"))
+            .catch(err => console.error("SW fail:", err));
+    }
+}
+
+// --- INSTALL PROMPT ---
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    showInstallButton();
+});
+
+function showInstallButton() {
+    if (document.getElementById("installBtn")) return;
+
+    const btn = document.createElement("button");
+    btn.id = "installBtn";
+    btn.innerText = "INSTALL APP";
+    btn.className = "green";
+    btn.style.position = "fixed";
+    btn.style.top = "10px";
+    btn.style.left = "10px";
+    btn.style.zIndex = 9999;
+
+    btn.onclick = async () => {
+        if (!deferredPrompt) return;
+
+        deferredPrompt.prompt();
+        const choice = await deferredPrompt.userChoice;
+
+        if (choice.outcome === "accepted") {
+            showHUD("APP INSTALLED");
+        }
+
+        deferredPrompt = null;
+    };
+
+    document.body.appendChild(btn);
+}
+
+// --- OFFLINE DETECTION ---
+function monitorConnection() {
+    function updateStatus() {
+        if (!navigator.onLine) {
+            showHUD("OFFLINE MODE");
+        } else {
+            showHUD("ONLINE");
+        }
+    }
+
+    window.addEventListener("offline", updateStatus);
+    window.addEventListener("online", updateStatus);
+}
+
+// --- BACKGROUND SYNC SIMULATION ---
+function backgroundSync() {
+    setInterval(() => {
+        console.log("Syncing data...");
+        // future: send to server if needed
+    }, 60000);
+}
+
+// --- EXTEND INIT ---
+const oldInitPart8 = window.onload;
+window.onload = () => {
+    if (oldInitPart8) oldInitPart8();
+
+    registerServiceWorker();
+    monitorConnection();
+    backgroundSync();
+};
+       <!-- =========================
+PART 9 — FINAL SYSTEM LAYER
+(App Initialization + Safeguards)
+STACK LAST — DO NOT PLACE ABOVE OTHER SCRIPTS
+========================= -->
+
+<script>
+// --- SAFE INITIALIZATION WRAPPER ---
+// Prevents overwrite collisions from multiple window.onload assignments
+
+(function() {
+    const initStack = [];
+
+    // Capture all previous onload functions safely
+    const oldOnload = window.onload;
+    if (typeof oldOnload === "function") {
+        initStack.push(oldOnload);
+    }
+
+    // Add additional initializers here if needed
+    initStack.push(function() {
+        console.log("%c SYSTEM BOOT: ARCHITECT OS INITIALIZED", "color:#10b981; font-weight:bold;");
+    });
+
+    // Final unified onload
+    window.onload = function() {
+        initStack.forEach(fn => {
+            try {
+                fn();
+            } catch (e) {
+                console.error("INIT ERROR:", e);
+            }
+        });
+    };
+})();
+
+
+// --- GLOBAL ERROR HANDLER ---
+window.onerror = function(message, source, lineno, colno, error) {
+    console.error("GLOBAL ERROR:", message, "at", lineno + ":" + colno);
+
+    const terminal = document.getElementById('terminal-results');
+    if (terminal) {
+        const line = document.createElement('div');
+        line.className = "text-state-red font-bold";
+        line.innerText = `!! SYSTEM ERROR: ${message}`;
+        terminal.appendChild(line);
+    }
+};
+
+
+// --- SAFETY: LOCAL STORAGE GUARD ---
+function safeParse(key, fallback = {}) {
+    try {
+        return JSON.parse(localStorage.getItem(key)) || fallback;
+    } catch (e) {
+        console.warn(`Corrupted localStorage key: ${key}. Resetting.`);
+        localStorage.removeItem(key);
+        return fallback;
+    }
+}
+
+
+// --- HARD RESET FUNCTION ---
+function fullSystemReset() {
+    if (!confirm("WARNING: This will wipe ALL system data. Proceed?")) return;
+
+    localStorage.clear();
+    location.reload();
+}
+
+
+// --- AUTO BACKUP SYSTEM ---
+setInterval(() => {
+    try {
+        const backup = {
+            fox: document.getElementById('input-fox')?.value || "",
+            mvs: document.getElementById('input-mvs')?.value || "",
+            timestamp: new Date().toISOString()
+        };
+        localStorage.setItem('architect_backup', JSON.stringify(backup));
+        console.log("%c AUTO-BACKUP COMPLETE", "color:#3b82f6;");
+    } catch (e) {
+        console.warn("Backup failed:", e);
+    }
+}, 60000); // every 60 seconds
+
+
+// --- RECOVERY PROMPT ---
+window.addEventListener('load', () => {
+    const backup = safeParse('architect_backup', null);
+    if (!backup) return;
+
+    if (confirm("Recovery point detected. Restore last session?")) {
+        if (document.getElementById('input-fox')) {
+            document.getElementById('input-fox').value = backup.fox;
+        }
+        if (document.getElementById('input-mvs')) {
+            document.getElementById('input-mvs').value = backup.mvs;
+        }
+        console.log("%c SESSION RESTORED", "color:#10b981;");
+    }
+});
+
+
+// --- KEYBOARD SHORTCUTS ---
+document.addEventListener('keydown', function(e) {
+    // CTRL + SHIFT + R = FULL RESET
+    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        fullSystemReset();
+    }
+
+    // CTRL + K = FOCUS TERMINAL
+    if (e.ctrlKey && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        const term = document.getElementById('terminal-input');
+        if (term) term.focus();
+    }
+
+    // ESC = CLOSE MODALS
+    if (e.key === "Escape") {
+        document.querySelectorAll('.flex[id^="modal"]').forEach(m => {
+            m.classList.replace('flex', 'hidden');
+        });
+    }
+});
+
+
+// --- FINAL SYSTEM HEARTBEAT ---
+setInterval(() => {
+    console.log("%c HEARTBEAT: SYSTEM STABLE", "color:#10b981; opacity:0.3;");
+}, 300000); // every 5 minutes
+
+</script>
+</script>
+
+</body>
+</html>
