@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Architect OS | Bee Well v21.0</title>
+    <title>Architect OS | Bee Well v22.0</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -13,344 +13,334 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
 
         :root {
-            /* System States */
-            --yellow: #facc15;  /* Static/Scattered */
-            --red: #ef4444;     /* Heat/Intensity */
-            --orange: #fb923c;  /* Threat/Grounding */
-            --purple: #8b5cf6;  /* Pressure/Overthinking */
-            --blue: #3b82f6;    /* Gravity/Shutdown */
-            --green: #10b981;   /* Flow/Regulated */
-            
-            --bg-base: #0a0a0c;
-            --glass: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.08);
+            --yellow: #facc15; --red: #ef4444; --orange: #fb923c;
+            --purple: #8b5cf6; --blue: #3b82f6; --green: #10b981;
+            --bg-base: #0a0a0a;
         }
 
         body {
-            background-color: var(--bg-base);
-            color: #e2e2e7;
+            background: var(--bg-base);
+            color: #f8fafc;
             font-family: 'Inter', sans-serif;
-            transition: all 0.5s ease;
-            overflow-x: hidden;
-            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+            transition: background 0.5s ease;
         }
 
         .glass {
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
         }
 
-        /* State Glows */
-        .state-active-yellow { box-shadow: 0 0 40px -10px rgba(250, 204, 21, 0.2); border-color: var(--yellow); }
-        .state-active-red { box-shadow: 0 0 40px -10px rgba(239, 68, 68, 0.2); border-color: var(--red); }
-        .state-active-orange { box-shadow: 0 0 40px -10px rgba(251, 146, 60, 0.2); border-color: var(--orange); }
-        .state-active-purple { box-shadow: 0 0 40px -10px rgba(139, 92, 246, 0.2); border-color: var(--purple); }
-        .state-active-blue { box-shadow: 0 0 40px -10px rgba(59, 130, 246, 0.2); border-color: var(--blue); }
-        .state-active-green { box-shadow: 0 0 40px -10px rgba(16, 185, 129, 0.2); border-color: var(--green); }
+        .state-btn {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-        /* The Governor Dial */
-        .governor-container { width: 120px; height: 120px; position: relative; }
+        .state-btn:active { transform: scale(0.92); }
 
-        /* HUD Animations */
-        @keyframes pulse-slow { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.6; } }
-        .hud-glow { animation: pulse-slow 4s infinite ease-in-out; }
-
-        .terminal-text { font-family: 'JetBrains Mono', monospace; }
+        /* Module Tabs Navigation */
+        .nav-active { color: var(--green); border-bottom: 2px solid var(--green); }
         
-        .tab-btn { opacity: 0.4; transition: 0.3s; border-bottom: 2px solid transparent; }
-        .tab-btn.active { opacity: 1; border-color: var(--green); color: var(--green); }
+        /* Terminal Theme */
+        .terminal-font { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Progress Ring */
+        .progress-ring { transition: stroke-dashoffset 0.35s; transform: rotate(-90deg); transform-origin: 50% 50%; }
+
+        /* Animations */
+        @keyframes pulse-soft { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.8; } }
+        .pulse-view { animation: pulse-soft 3s infinite; }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
-    <div id="state-glow" class="fixed inset-0 pointer-events-none transition-all duration-1000 opacity-20"></div>
-
     <header class="flex justify-between items-center mb-8">
         <div>
-            <h1 class="text-2xl font-extrabold tracking-tighter text-white">ARCHITECT <span class="text-green-500 text-sm font-mono ml-2">v21.0</span></h1>
-            <p class="text-xs terminal-text opacity-50">SYSTEM STATUS: <span id="sys-status">STABLE</span></p>
+            <h1 class="text-2xl font-extrabold tracking-tighter text-white uppercase">Architect OS <span class="text-xs text-gray-500 font-mono">v22.0</span></h1>
+            <p id="pilot-status" class="text-xs text-green-400 font-mono tracking-widest">PILOT ONLINE // STABLE</p>
         </div>
-        <div class="flex gap-4">
-            <button onclick="toggleSanctuary()" id="sanctuary-toggle" class="glass px-4 py-2 text-xs font-bold transition-all">SANCTUARY OFF</button>
-            <div class="governor-container">
-                <canvas id="govChart"></canvas>
-                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <span id="gov-val" class="text-xs font-bold">70%</span>
-                    <span class="text-[8px] opacity-40">GOVERNOR</span>
-                </div>
-            </div>
+        <div class="flex gap-3">
+            <button onclick="toggleSpiritualMode()" id="spirit-toggle" class="glass px-3 py-1 text-[10px] uppercase tracking-widest text-gray-400">Spiritual: Off</button>
+            <div id="governor-badge" class="glass px-3 py-1 text-[10px] text-yellow-500 font-bold uppercase">70% Governor</div>
         </div>
     </header>
 
-    <section class="mb-8">
-        <h2 class="text-[10px] terminal-text opacity-40 uppercase mb-3 tracking-[0.2em]">Atmospheric Calibration</h2>
-        <div class="grid grid-cols-3 md:grid-cols-6 gap-3">
-            <button onclick="setState('yellow')" class="glass p-4 flex flex-col items-center gap-2 hover:bg-yellow-500/10 transition-all border-yellow-500/20">
-                <div class="w-2 h-2 rounded-full bg-yellow-400"></div>
-                <span class="text-[10px] font-bold">STATIC</span>
-            </button>
-            <button onclick="setState('red')" class="glass p-4 flex flex-col items-center gap-2 hover:bg-red-500/10 transition-all border-red-500/20">
-                <div class="w-2 h-2 rounded-full bg-red-500"></div>
-                <span class="text-[10px] font-bold">HEAT</span>
-            </button>
-            <button onclick="setState('orange')" class="glass p-4 flex flex-col items-center gap-2 hover:bg-orange-500/10 transition-all border-orange-500/20">
-                <div class="w-2 h-2 rounded-full bg-orange-400"></div>
-                <span class="text-[10px] font-bold">THREAT</span>
-            </button>
-            <button onclick="setState('purple')" class="glass p-4 flex flex-col items-center gap-2 hover:bg-purple-500/10 transition-all border-purple-500/20">
-                <div class="w-2 h-2 rounded-full bg-purple-500"></div>
-                <span class="text-[10px] font-bold">PRESSURE</span>
-            </button>
-            <button onclick="setState('blue')" class="glass p-4 flex flex-col items-center gap-2 hover:bg-blue-500/10 transition-all border-blue-500/20">
-                <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-                <span class="text-[10px] font-bold">GRAVITY</span>
-            </button>
-            <button onclick="setState('green')" class="glass p-4 flex flex-col items-center gap-2 hover:bg-green-500/10 transition-all border-green-500/20">
-                <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_10px_#10b981]"></div>
-                <span class="text-[10px] font-bold">FLOW</span>
-            </button>
-        </div>
-    </section>
+    <nav class="flex gap-6 overflow-x-auto pb-4 mb-6 no-scrollbar text-[11px] uppercase tracking-widest font-bold border-b border-white/10">
+        <button onclick="setModule('cockpit')" class="nav-link nav-active whitespace-nowrap" id="nav-cockpit">Cockpit</button>
+        <button onclick="setModule('regulation')" class="nav-link whitespace-nowrap" id="nav-regulation">Regulation</button>
+        <button onclick="setModule('execution')" class="nav-link whitespace-nowrap" id="nav-execution">Execution</button>
+        <button onclick="setModule('integration')" class="nav-link whitespace-nowrap" id="nav-integration">Integration</button>
+        <button onclick="setModule('sanctuary')" class="nav-link whitespace-nowrap" id="nav-sanctuary">Sanctuary</button>
+    </nav>
 
-    <main class="grid md:grid-cols-3 gap-6">
-        <div class="md:col-span-2 flex flex-col gap-6">
-            <div id="guidance-panel" class="glass p-8 min-h-[200px] flex flex-col justify-center border-l-4 border-green-500">
-                <h3 id="guidance-title" class="text-2xl font-light mb-2">The Pilot is ready.</h3>
-                <p id="guidance-text" class="text-sm opacity-60 leading-relaxed">System calibrated for standard operation. Select an atmospheric state to begin a reset protocol.</p>
-                <div id="action-steps" class="mt-6 flex flex-wrap gap-2"></div>
+    <main id="app-view">
+        <section id="mod-cockpit" class="space-y-6">
+            <div class="glass p-6 text-center space-y-4">
+                <p class="text-[10px] uppercase tracking-[0.2em] text-gray-500">Current State Recognition</p>
+                <div class="grid grid-cols-5 gap-3">
+                    <button onclick="triggerReset('yellow')" class="state-btn w-full h-12 rounded-lg bg-yellow-400/20 border border-yellow-400/40" title="Static / ADHD"></button>
+                    <button onclick="triggerReset('red')" class="state-btn w-full h-12 rounded-lg bg-red-500/20 border border-red-500/40" title="Heat / BPD"></button>
+                    <button onclick="triggerReset('orange')" class="state-btn w-full h-12 rounded-lg bg-orange-400/20 border border-orange-400/40" title="Threat / CPTSD"></button>
+                    <button onclick="triggerReset('purple')" class="state-btn w-full h-12 rounded-lg bg-purple-500/20 border border-purple-500/40" title="Pressure / GAD"></button>
+                    <button onclick="triggerReset('blue')" class="state-btn w-full h-12 rounded-lg bg-blue-500/20 border border-blue-500/40" title="Gravity / MDD"></button>
+                </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="glass p-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xs font-bold tracking-widest uppercase">The Fox</h3>
-                        <span class="text-[10px] opacity-40 italic">One Main Objective</span>
-                    </div>
-                    <input type="text" id="fox-input" placeholder="Define the primary target..." class="bg-white/5 border border-white/10 w-full p-3 rounded-xl text-sm outline-none focus:border-green-500 transition-all mb-4">
-                    <div class="flex justify-between items-center">
-                        <label class="text-[10px] opacity-40">MVS (Minimum Viable Shift)</label>
-                        <button onclick="addMVS()" class="text-[10px] text-green-500">+ ADD STEP</button>
-                    </div>
-                    <div id="mvs-list" class="mt-2 space-y-2"></div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass p-4 text-center">
+                    <div class="text-[10px] text-gray-500 uppercase mb-2">System Load</div>
+                    <canvas id="govChart" width="100" height="100"></canvas>
                 </div>
+                <div class="glass p-4 flex flex-col justify-center items-center">
+                    <div class="text-[10px] text-gray-500 uppercase mb-2">90s Flush</div>
+                    <div id="flush-timer" class="text-3xl font-bold font-mono">90</div>
+                    <button onclick="startFlush()" class="mt-2 text-[9px] uppercase border border-white/20 px-2 py-1 rounded">Start</button>
+                </div>
+            </div>
 
-                <div class="glass p-6">
-                    <h3 class="text-xs font-bold tracking-widest uppercase mb-4">Integrity Log</h3>
-                    <div id="black-box" class="h-32 overflow-y-auto terminal-text text-[10px] space-y-1 opacity-60 scrollbar-hide">
-                        <div>[0.00] OS_INITIALIZED</div>
-                        <div>[0.01] KERNEL_LOAD_SUCCESS</div>
+            <div class="glass p-4 space-y-2">
+                <div class="text-[10px] text-gray-500 uppercase flex justify-between">
+                    <span>Active Protocol</span>
+                    <span id="protocol-name" class="text-white">None</span>
+                </div>
+                <p id="protocol-desc" class="text-sm text-gray-300 italic">Fix the state before taking the step.</p>
+            </div>
+        </section>
+
+        <section id="mod-regulation" class="hidden space-y-4">
+            <div class="glass p-6">
+                <div id="grounding-step-view" class="space-y-4">
+                    <h2 id="gr-phase" class="text-xs uppercase tracking-widest text-green-400">Descent</h2>
+                    <p id="gr-question" class="text-xl font-medium">What is my current "mental weather"?</p>
+                    <p id="gr-purpose" class="text-xs text-gray-500 italic">Map the landscape.</p>
+                    <div class="flex gap-2 mt-6">
+                        <button onclick="prevGrounding()" class="glass flex-1 py-3 text-xs uppercase">Prev</button>
+                        <button onclick="nextGrounding()" class="bg-white text-black flex-1 py-3 text-xs font-bold uppercase rounded-xl">Next</button>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <div class="flex flex-col gap-4">
-            <div class="flex justify-around glass p-2">
-                <button onclick="switchTab('war')" class="tab-btn active text-[10px] font-bold py-2 px-4" id="btn-war">WAR ROOM</button>
-                <button onclick="switchTab('zion')" class="tab-btn text-[10px] font-bold py-2 px-4" id="btn-zion">ZION</button>
-                <button onclick="switchTab('audit')" class="tab-btn text-[10px] font-bold py-2 px-4" id="btn-audit">AUDIT</button>
+        <section id="mod-execution" class="hidden space-y-6">
+            <div class="glass p-6">
+                <h2 class="text-xs uppercase tracking-widest mb-4">The Fox (Daily Focus)</h2>
+                <input type="text" id="fox-input" placeholder="Enter your ONE main objective..." class="w-full bg-transparent border-b border-white/20 py-2 focus:outline-none focus:border-green-400">
             </div>
             
-            <div id="archive-view" class="glass p-6 h-full min-h-[400px]">
+            <div class="glass p-6">
+                <h2 class="text-xs uppercase tracking-widest mb-4 text-gray-500">Maintenance Checklist</h2>
+                <div id="checklist-container" class="space-y-3">
+                    </div>
+            </div>
+        </section>
+
+        <section id="mod-integration" class="hidden space-y-4">
+            <div class="glass p-4 overflow-x-auto">
+                <table class="w-full text-[10px] terminal-font uppercase">
+                    <thead>
+                        <tr class="border-b border-white/10">
+                            <th class="text-left py-2">Symptom</th>
+                            <th>ADHD</th><th>BPD</th><th>CPTSD</th>
+                        </tr>
+                    </thead>
+                    <tbody id="symptom-table">
+                        </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="mod-sanctuary" class="hidden space-y-4">
+            <div class="glass p-8 text-center space-y-6">
+                <i class="fa-solid fa-cloud-moon text-4xl text-blue-300 opacity-50"></i>
+                <div id="sanctuary-text" class="italic text-gray-400">
+                    "You are a Pilot, not the Storm."
                 </div>
-        </div>
+                <button class="glass px-6 py-2 text-xs uppercase">Play White Noise</button>
+            </div>
+        </section>
     </main>
 
-    <div id="system-voice" class="fixed bottom-8 right-8 pointer-events-none opacity-0 transition-all duration-500 flex items-center gap-4 bg-black/80 px-4 py-3 rounded-full border border-white/10 glass">
-        <div class="w-2 h-2 rounded-full bg-green-500 hud-glow"></div>
-        <span id="voice-text" class="text-xs font-medium italic opacity-80">System Check Complete.</span>
+    <div id="reset-overlay" class="fixed inset-0 bg-black/95 z-[100] hidden flex flex-col items-center justify-center p-8 text-center">
+        <h1 id="reset-title" class="text-4xl font-black mb-4 uppercase"></h1>
+        <p id="reset-text" class="text-lg mb-8 italic"></p>
+        <button onclick="closeReset()" class="glass px-8 py-3 text-xs uppercase tracking-widest">Acknowledge</button>
     </div>
 
     <script>
-        /* ==========================================================================
-           📊 DATA ARCHITECTURE
-           ========================================================================== */
+        /* =========================
+           DATA CONFIGURATION
+           ========================= */
         const APP_STATE = {
-            activeState: 'green',
-            sanctuary: false,
-            governor: 70,
-            fox: "",
-            mvs: [],
-            currentTab: 'war'
+            spiritualMode: false,
+            currentModule: 'cockpit',
+            groundingIndex: 0,
+            governor: 70
         };
 
-        const PROTOCOLS = {
-            yellow: { title: "Clear the Static", text: "ADHD/Scattered Focus detected. Reduce all sensory inputs. Put on headphones (Brown Noise). Clear the workspace physically.", actions: ["Headphones ON", "Close Tabs", "5-Min Tidy"] },
-            red: { title: "Cool the Heat", text: "High Emotional Intensity. The Amygdala is loud. Use cold water shock to the face immediately. Do not speak until the 90-second flush passes.", actions: ["Cold Water Splash", "90s Silence", "Box Breathing"] },
-            orange: { title: "Ground the Threat", text: "Hypervigilance/Threat response detected. Find 5 things you can see, 4 you can touch. Your body is safe in this room.", actions: ["5-4-3-2-1 Grounding", "Weighted Blanket", "Verify Safety"] },
-            purple: { title: "Relieve the Pressure", text: "Overthinking/Anxiety Spiral. Externalize the thoughts. The brain cannot process what it is trying to store. Write it down.", actions: ["Brain Dump", "Fact vs. Fear Check", "3-Deep Breaths"] },
-            blue: { title: "Resist the Gravity", text: "Shutdown/Depression. The battery is critically low. Do not aim for productivity. Aim for one tiny movement.", actions: ["Hydrate", "Stand Up Once", "Listen to 1 Song"] },
-            green: { title: "Maintain Flow", text: "System is regulated. Operate at the 70% Governor to preserve battery. Focus on the Fox.", actions: ["Start Pomodoro", "Check Battery", "Review Fox"] }
-        };
-
-        const ZION_ANCHORS = [
-            "You are a Pilot, not the storm.",
-            "Fix the state, then take the step.",
-            "The 90-second chemical spike is temporary. Your sovereignty is permanent.",
-            "One pebble, one breath, one step.",
-            "The Architect builds for the storm, not for the sunshine."
+        const GROUNDING_TOOL = [
+            { phase: 'DESCENT', step: 'Horizon', question: 'What is my current mental weather?', purpose: 'Map the landscape.' },
+            { phase: 'DESCENT', step: 'Filter', question: 'Is this noise (fear/trauma) or signal (immediate need)?', purpose: 'Isolate the true need.' },
+            { phase: 'DESCENT', step: 'Pinpoint', question: 'What is the one tiny, kind act I can do right now?', purpose: 'Find the "Fox" (the lever).' },
+            { phase: 'ASCENT', step: 'Why', question: 'Is this reaction from the present or a past trigger?', purpose: 'Identify the root cause.' },
+            { phase: 'ASCENT', step: 'Ripple', question: 'If I do this tiny act, how does it shift my next hour?', purpose: 'See the system impact.' },
+            { phase: 'ASCENT', step: 'Shadow', question: 'What is my brain trying to protect me from?', purpose: 'Practice self-compassion.' },
+            { phase: 'ASCENT', step: 'Summit', question: 'What is one wise truth I can hold for myself?', purpose: 'Gain perspective.' },
+            { phase: 'LOOP', step: 'So What?', question: 'What am I giving myself permission to stop doing today?', purpose: 'Strategic relief.' },
+            { phase: 'LOOP', step: 'Re-entry', question: 'How does this help me move into the next part of the day?', purpose: 'Close the loop.' }
         ];
 
-        /* ==========================================================================
-           🛠️ SYSTEM CORE LOGIC
-           ========================================================================== */
-        
-        function setState(state) {
-            APP_STATE.activeState = state;
-            const p = PROTOCOLS[state];
-            
-            // UI Feedback
-            document.body.className = `p-4 md:p-8 state-active-${state}`;
-            document.getElementById('state-glow').style.background = `radial-gradient(circle at center, var(--${state}), transparent)`;
-            document.getElementById('guidance-title').innerText = p.title;
-            document.getElementById('guidance-text').innerText = p.text;
-            document.getElementById('sys-status').innerText = state.toUpperCase();
-            document.getElementById('sys-status').className = `text-${state}-500 ml-2 font-mono`;
-            
-            // Load Reset Actions
-            const container = document.getElementById('action-steps');
-            container.innerHTML = p.actions.map(a => `<button onclick="logEvent('RESET_STEP_COMPLETE: ${a}')" class="px-3 py-1 bg-white/5 rounded-full text-[10px] border border-white/10 hover:bg-white/10 transition-all">${a}</button>`).join('');
+        const CHECKLIST = [
+            { task: 'Drink a glass of water', cat: 'Physical' },
+            { task: 'Step outside for 5 mins', cat: 'Physical' },
+            { task: '5 mins of stretching', cat: 'Physical' },
+            { task: 'Write 1 thing grateful for', cat: 'Mental' },
+            { task: 'Deep breathing (4-4-4)', cat: 'Mental' }
+        ];
 
-            logEvent(`STATE_CHANGE: ${state.toUpperCase()}`);
-            triggerVoice(`Transitioning to ${state.toUpperCase()} protocol.`);
+        const RESET_PROTOCOLS = {
+            yellow: { title: "Static", action: "Reduce inputs. Simplify task. Headphones + Brown Noise." },
+            red: { title: "Heat", action: "COLD WATER SHOCK. Stop talking. 90-second flush." },
+            orange: { title: "Threat", action: "Physical grounding. Heavy blanket. You are safe." },
+            purple: { title: "Pressure", action: "Write it down. Externalize the memory shield." },
+            blue: { title: "Gravity", action: "Rest. Hydrate. Move one toe. Minimal action." }
+        };
+
+        const RESEARCH_DATA = [
+            { sym: 'Distractibility', adhd: '✓', bpd: '', cptsd: '' },
+            { sym: 'Dysregulation', adhd: '', bpd: '✓', cptsd: '✓' },
+            { sym: 'Hypervigilance', adhd: '', bpd: '', cptsd: '✓' },
+            { sym: 'Impulsivity', adhd: '✓', bpd: '✓', cptsd: '' }
+        ];
+
+        /* =========================
+           SYSTEM LOGIC
+           ========================= */
+
+        function setModule(mod) {
+            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(`mod-${mod}`).classList.remove('hidden');
+            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('nav-active'));
+            document.getElementById(`nav-${mod}`).classList.add('nav-active');
+            APP_STATE.currentModule = mod;
+            if(mod === 'execution') renderChecklist();
+            if(mod === 'integration') renderIntegration();
+        }
+
+        function triggerReset(state) {
+            const proto = RESET_PROTOCOLS[state];
+            document.getElementById('reset-title').innerText = proto.title;
+            document.getElementById('reset-title').style.color = `var(--${state})`;
+            document.getElementById('reset-text').innerText = proto.action;
+            document.getElementById('reset-overlay').classList.remove('hidden');
+            document.getElementById('protocol-name').innerText = proto.title;
+            document.getElementById('protocol-desc').innerText = proto.action;
+            updateGovernor(90); // State spikes load
+        }
+
+        function closeReset() {
+            document.getElementById('reset-overlay').classList.add('hidden');
+            setTimeout(() => updateGovernor(70), 5000); // Gradual return
+        }
+
+        function startFlush() {
+            let count = 90;
+            const el = document.getElementById('flush-timer');
+            const timer = setInterval(() => {
+                count--;
+                el.innerText = count;
+                if(count <= 0) {
+                    clearInterval(timer);
+                    el.innerText = "90";
+                    alert("Chemical Flush Complete. Brain clearing.");
+                }
+            }, 1000);
+        }
+
+        function toggleSpiritualMode() {
+            APP_STATE.spiritualMode = !APP_STATE.spiritualMode;
+            const btn = document.getElementById('spirit-toggle');
+            btn.innerText = APP_STATE.spiritualMode ? "Spiritual: On" : "Spiritual: Off";
+            btn.style.color = APP_STATE.spiritualMode ? "var(--purple)" : "";
             
-            if (state !== 'green') {
-                updateGovernor(40); // Auto-drop energy during stress
-            } else {
-                updateGovernor(70);
-            }
+            // Example of shifting language
+            document.getElementById('sanctuary-text').innerText = APP_STATE.spiritualMode 
+                ? "“Be still, and know that you are held.”" 
+                : "“You are a Pilot, not the Storm.”";
         }
 
         function updateGovernor(val) {
             APP_STATE.governor = val;
-            document.getElementById('gov-val').innerText = val + '%';
-            govChart.data.datasets[0].data = [val, 100 - val];
-            govChart.data.datasets[0].backgroundColor[0] = val > 75 ? '#ef4444' : '#10b981';
-            govChart.update();
+            window.govChart.data.datasets[0].data = [val, 100 - val];
+            window.govChart.data.datasets[0].backgroundColor[0] = val > 75 ? '#ef4444' : '#10b981';
+            window.govChart.update();
         }
 
-        function toggleSanctuary() {
-            APP_STATE.sanctuary = !APP_STATE.sanctuary;
-            const btn = document.getElementById('sanctuary-toggle');
-            if(APP_STATE.sanctuary) {
-                document.body.style.filter = "contrast(0.9) brightness(0.8) saturate(0.5)";
-                btn.innerText = "SANCTUARY ON";
-                btn.classList.add('bg-blue-500/20', 'text-blue-400');
-                triggerVoice("Sanctuary Mode engaged. Low stimulus active.");
-            } else {
-                document.body.style.filter = "none";
-                btn.innerText = "SANCTUARY OFF";
-                btn.classList.remove('bg-blue-500/20', 'text-blue-400');
-            }
-        }
-
-        function logEvent(msg) {
-            const bb = document.getElementById('black-box');
-            const time = ((performance.now() - startTime) / 1000).toFixed(2);
-            const div = document.createElement('div');
-            div.innerText = `[${time}] ${msg}`;
-            bb.prepend(div);
-        }
-
-        function triggerVoice(text) {
-            const v = document.getElementById('system-voice');
-            const t = document.getElementById('voice-text');
-            t.innerText = text;
-            v.style.opacity = "1";
-            v.style.transform = "translateY(0)";
-            setTimeout(() => {
-                v.style.opacity = "0";
-                v.style.transform = "translateY(10px)";
-            }, 3000);
-        }
-
-        function switchTab(tab) {
-            APP_STATE.currentTab = tab;
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(`btn-${tab}`).classList.add('active');
-            renderArchive();
-        }
-
-        function renderArchive() {
-            const view = document.getElementById('archive-view');
-            if(APP_STATE.currentTab === 'zion') {
-                view.innerHTML = `
-                    <h3 class="text-xs font-bold mb-4 opacity-40">ZION ANCHORS</h3>
-                    <div class="space-y-4">
-                        ${ZION_ANCHORS.map(a => `<div class="p-4 glass italic text-sm border-l-2 border-white/10">${a}</div>`).join('')}
+        function renderChecklist() {
+            const container = document.getElementById('checklist-container');
+            container.innerHTML = CHECKLIST.map((item, i) => `
+                <div class="flex items-center gap-3 p-3 glass bg-white/5 rounded-xl">
+                    <input type="checkbox" class="w-5 h-5 accent-green-400">
+                    <div class="flex-1">
+                        <p class="text-sm">${item.task}</p>
+                        <p class="text-[9px] text-gray-500 uppercase">${item.cat}</p>
                     </div>
-                `;
-            } else if(APP_STATE.currentTab === 'audit') {
-                view.innerHTML = `
-                    <h3 class="text-xs font-bold mb-4 opacity-40">DAILY AUDIT</h3>
-                    <div class="space-y-2">
-                        <button class="w-full glass p-3 text-xs text-left" onclick="alert('Checking Core Needs: Hydration, Air, Light...')">BIOLOGICAL CHECK</button>
-                        <button class="w-full glass p-3 text-xs text-left" onclick="alert('Checking State: Static, Heat, Gravity...')">ATMOSPHERIC CHECK</button>
-                    </div>
-                `;
-            } else {
-                view.innerHTML = `
-                    <h3 class="text-xs font-bold mb-4 opacity-40">WAR ROOM</h3>
-                    <p class="text-[10px] opacity-60 mb-4">Strategic overview of active projects and state-history.</p>
-                    <div class="h-24 bg-white/5 rounded-xl border border-white/5 flex items-center justify-center italic text-[10px] opacity-40">Wave Telemetry Loading...</div>
-                `;
-            }
-        }
-
-        function addMVS() {
-            const task = prompt("Enter a 2-minute non-negotiable step:");
-            if (task) {
-                APP_STATE.mvs.push(task);
-                renderMVS();
-            }
-        }
-
-        function renderMVS() {
-            const list = document.getElementById('mvs-list');
-            list.innerHTML = APP_STATE.mvs.map((m, i) => `
-                <div class="flex items-center gap-2 p-2 glass text-xs group">
-                    <input type="checkbox" class="accent-green-500">
-                    <span class="flex-grow">${m}</span>
-                    <button onclick="APP_STATE.mvs.splice(${i},1); renderMVS();" class="opacity-0 group-hover:opacity-40"><i class="fas fa-times"></i></button>
                 </div>
             `).join('');
         }
 
-        /* ==========================================================================
-           🚀 INITIALIZATION
-           ========================================================================== */
-        const startTime = performance.now();
-        const ctxGov = document.getElementById('govChart').getContext('2d');
-        const govChart = new Chart(ctxGov, {
-            type: 'doughnut',
-            data: {
-                datasets: [{
-                    data: [70, 30],
-                    backgroundColor: ['#10b981', '#1f1f23'],
-                    borderWidth: 0,
-                    circumference: 180,
-                    rotation: 270
-                }]
-            },
-            options: { cutout: '85%', plugins: { legend: { display: false }, tooltip: { enabled: false } } }
-        });
+        function renderIntegration() {
+            const container = document.getElementById('symptom-table');
+            container.innerHTML = RESEARCH_DATA.map(r => `
+                <tr class="border-b border-white/5">
+                    <td class="py-3 text-gray-400">${r.sym}</td>
+                    <td class="text-center">${r.adhd}</td>
+                    <td class="text-center">${r.bpd}</td>
+                    <td class="text-center">${r.cptsd}</td>
+                </tr>
+            `).join('');
+        }
 
+        function nextGrounding() {
+            if(APP_STATE.groundingIndex < GROUNDING_TOOL.length - 1) {
+                APP_STATE.groundingIndex++;
+                updateGroundingUI();
+            }
+        }
+
+        function prevGrounding() {
+            if(APP_STATE.groundingIndex > 0) {
+                APP_STATE.groundingIndex--;
+                updateGroundingUI();
+            }
+        }
+
+        function updateGroundingUI() {
+            const step = GROUNDING_TOOL[APP_STATE.groundingIndex];
+            document.getElementById('gr-phase').innerText = step.phase;
+            document.getElementById('gr-question').innerText = step.question;
+            document.getElementById('gr-purpose').innerText = step.purpose;
+        }
+
+        /* =========================
+           INIT
+           ========================= */
         window.onload = () => {
-            renderArchive();
-            setState('green');
-            logEvent("SYSTEM_READY");
-            setInterval(() => {
-                const randomAnchor = ZION_ANCHORS[Math.floor(Math.random() * ZION_ANCHORS.length)];
-                triggerVoice(randomAnchor);
-            }, 60000); // Hourly sanity check-in
-        };
-
-        // GLOBAL BLACK BOX ERROR HANDLER
-        window.onerror = function(msg, url, line) {
-            logEvent(`CRITICAL_GLITCH: ${msg} [Line: ${line}]`);
-            return false;
+            const ctx = document.getElementById('govChart').getContext('2d');
+            window.govChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [70, 30],
+                        backgroundColor: ['#10b981', '#1a1a1a'],
+                        borderWidth: 0,
+                        circumference: 180,
+                        rotation: 270
+                    }]
+                },
+                options: { cutout: '85%', plugins: { legend: { display: false } } }
+            });
+            updateGroundingUI();
         };
     </script>
 </body>
