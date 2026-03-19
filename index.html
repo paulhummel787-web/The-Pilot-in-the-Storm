@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Architect OS | Bee Well</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        state: {
+                            yellow: '#facc15', // Static
+                            red: '#ef4444',    // Heat
+                            orange: '#f97316', // Threat
+                            purple: '#a855f7', // Pressure
+                            blue: '#3b82f6',   // Gravity
+                            white: '#e5e7eb',  // Fog
+                            green: '#10b981'   // Flow
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* --- Core System Variables --- */
+        :root {
+            --bg-base: #050505;
+            --text-main: #efeee5;
+            --panel-bg: rgba(15, 15, 15, 0.7);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --glass-shadow: 0 30px 60px -12px rgba(0,0,0,0.7);
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            overflow-x: hidden;
+            transition: all 0.5s ease;
+        }
+
+        /* --- Glassmorphism --- */
+        .glass-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(24px) saturate(150%);
+            -webkit-backdrop-filter: blur(24px) saturate(150%);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--glass-shadow);
+            border-radius: 2rem;
+        }
+
+        .interactive-card {
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+        }
+        .interactive-card:hover {
+            transform: translateY(-6px);
+            border-color: currentColor;
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.3);
+        }
+
+        /* --- The Symptom Soup (Background Blobs) --- */
+        .bg-blob {
+            position: fixed;
+            width: 45vw;
+            height: 45vw;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.15;
+            z-index: -1;
+            animation: float 20s infinite ease-in-out;
+            transition: background 1s ease;
+        }
+        #blob1 { top: -10%; left: -10%; background: #a855f7; }
+        #blob2 { bottom: -10%; right: -10%; background: #3b82f6; animation-delay: -5s; }
+        #blob3 { top: 40%; left: 30%; background: #facc15; animation-delay: -10s; }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(5%, -5%) scale(1.1); }
+        }
+
+        /* --- Animations --- */
+        .fade-in { animation: fadeIn 0.6s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pulse-ring { animation: pulseRing 3s infinite ease-in-out; }
+        @keyframes pulseRing {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 0.3; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+
+        /* --- Scrollbar & Sliders --- */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            background: rgba(255,255,255,0.1);
+            height: 6px;
+            border-radius: 3px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px; width: 20px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255,255,255,0.3);
+        }
+
+        /* Hide sections dynamically */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease-out forwards; }
+    </style>
+</head>
+<body class="pb-32">
+
+    <div class="bg-blob" id="blob1"></div>
+    <div class="bg-blob" id="blob2"></div>
+    <div class="bg-blob" id="blob3"></div>
+
+    <nav class="fixed top-0 w-full z-50 glass-panel !rounded-none border-t-0 border-x-0 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center font-black text-sm">OS</div>
+            <div>
+                <h1 class="font-black tracking-tighter leading-none">ARCHITECT</h1>
+                <p class="font-mono text-[9px] uppercase tracking-widest opacity-50 text-state-green">System Online</p>
+            </div>
+        </div>
+        <div class="hidden md:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-60">
+            <button onclick="switchTab('triage')" id="nav-triage" class="hover:text-white hover:opacity-100 transition nav-btn active">01 Triage</button>
+            <button onclick="switchTab('execution')" id="nav-execution" class="hover:text-white hover:opacity-100 transition nav-btn">02 Execution</button>
+            <button onclick="switchTab('governor')" id="nav-governor" class="hover:text-white hover:opacity-100 transition nav-btn">03 Governor</button>
+            <button onclick="switchTab('logs')" id="nav-logs" class="hover:text-white hover:opacity-100 transition nav-btn">04 Shield & Logs</button>
+            <button onclick="switchTab('anchors')" id="nav-anchors" class="hover:text-white hover:opacity-100 transition nav-btn">05 Truth Anchors</button>
+        </div>
+        <div class="flex gap-4 items-center">
+            <span id="nav-clock" class="font-mono text-sm font-bold tracking-tighter">00:00</span>
+            <button onclick="triggerPanic()" class="px-4 py-2 bg-state-red text-white rounded-full font-black uppercase text-[10px] tracking-widest shadow-[0_0_15px_rgba(239,68,68,0.4)] hover:scale-105 transition">PANIC</button>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-6 pt-32 space-y-16">
+
+        <section id="tab-triage" class="tab-content active space-y-12">
+            
+            <header class="mb-12">
+                <h2 class="text-[10px] font-black uppercase tracking-[0.5em] opacity-40 mb-2">Phase 01</h2>
+                <h3 class="text-5xl md:text-7xl font-black tracking-tighter italic serif">Diagnostic Matrix</h3>
+                <p class="text-sm opacity-50 mt-4 max-w-xl font-mono uppercase">Identify the biological frequency currently dominating the architecture. Fix the state, then take the step.</p>
+            </header>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <button onclick="activateState('yellow')" class="interactive-card p-6 bg-state-yellow/10 text-state-yellow rounded-3xl text-left group">
+                    <i class="fas fa-bolt text-2xl mb-4 group-hover:scale-110 transition"></i>
+                    <h4 class="font-black text-xs uppercase tracking-widest">Static</h4>
+                    <p class="text-[9px] opacity-60 font-mono mt-1">ADHD / Overload</p>
+                </button>
+                <button onclick="activateState('red')" class="interactive-card p-6 bg-state-red/10 text-state-red rounded-3xl text-left group">
+                    <i class="fas fa-fire text-2xl mb-4 group-hover:scale-110 transition"></i>
+                    <h4 class="font-black text-xs uppercase tracking-widest">Heat</h4>
+                    <p class="text-[9px] opacity-60 font-mono mt-1">BPD / Redline</p>
+                </button>
+                <button onclick="activateState('orange')" class="interactive-card p-6 bg-state-orange/10 text-state-orange rounded-3xl text-left group">
+                    <i class="fas fa-ghost text-2xl mb-4 group-hover:scale-110 transition"></i>
+                    <h4 class="font-black text-xs uppercase tracking-widest">Threat</h4>
+                    <p class="text-[9px] opacity-60 font-mono mt-1">CPTSD / Echo</p>
+                </button>
+                <button onclick="activateState('purple')" class="interactive-card p-6 bg-state-purple/10 text-state-purple rounded-3xl text-left group">
+                    <i class="fas fa-compress-arrows-alt text-2xl mb-4 group-hover:scale-110 transition"></i>
+                    <h4 class="font-black text-xs uppercase tracking-widest">Pressure</h4>
+                    <p class="text-[9px] opacity-60 font-mono mt-1">GAD / Spiral</p>
+                </button>
+                <button onclick="activateState('blue')" class="interactive-card p-6 bg-state-blue/10 text-state-blue rounded-3xl text-left group">
+                    <i class="fas fa-arrow-down text-2xl mb-4 group-hover:scale-110 transition"></i>
+                    <h4 class="font-black text-xs uppercase tracking-widest">Gravity</h4>
+                    <p class="text-[9px] opacity-60 font-mono mt-1">MDD / Sink</p>
+                </button>
+                <button onclick="activateState('white')" class="interactive-card p-6 bg-state-white/10 text-state-white rounded-3xl text-left group">
+                    <i class="fas fa-cloud text-2xl mb-4 group-hover:scale-110 transition"></i>
+                    <h4 class="font-black text-xs uppercase tracking-widest">Fog</h4>
+                    <p class="text-[9px] opacity-60 font-mono mt-1">PFC Bypass</p>
+                </button>
+            </div>
+
+            <div id="active-state-dash" class="hidden glass-panel p-8 md:p-16 border-2 transition-all duration-700">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h4 class="text-[10px] font-black uppercase tracking-[0.5em] opacity-40 mb-2">Protocol Active</h4>
+                        <h3 id="dash-title" class="text-5xl font-black tracking-tighter mb-4">State Name</h3>
+                        <p id="dash-fix" class="text-xl font-light italic opacity-80 mb-8">Fix instruction goes here.</p>
+                        
+                        <div class="p-6 bg-black/30 rounded-2xl border border-white/5">
+                            <h5 class="text-[10px] font-black uppercase tracking-widest opacity-50 mb-2 text-state-green">Target Shift (MVS)</h5>
+                            <p id="dash-mvs" class="font-bold text-sm">Minimum viable step instruction.</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-center justify-center gap-6">
+                        <div class="relative w-48 h-48 flex items-center justify-center">
+                            <div class="absolute inset-0 border-4 border-white/10 rounded-full"></div>
+                            <div id="breathe-circle" class="w-16 h-16 bg-white/20 rounded-full transition-all duration-[4000ms] ease-in-out"></div>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <span id="breathe-instruction" class="text-xs font-black uppercase tracking-widest opacity-50 mb-1">Ready</span>
+                                <span id="breathe-timer" class="text-4xl font-mono font-black">90</span>
+                            </div>
+                        </div>
+                        <button onclick="startFlush()" id="btn-flush" class="w-full py-4 bg-white text-black rounded-full font-black uppercase tracking-widest text-[10px] hover:scale-105 transition">Initiate 90s Flush</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel p-8 md:p-12">
+                <h4 class="text-[10px] font-black uppercase tracking-[0.5em] opacity-40 mb-6">Level 0: Physical Override</h4>
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+                    <div id="g-5" class="p-4 bg-white/5 rounded-2xl opacity-30 transition-all"><span class="text-2xl font-black opacity-50">5</span><p class="text-[10px] uppercase mt-2">See</p></div>
+                    <div id="g-4" class="p-4 bg-white/5 rounded-2xl opacity-30 transition-all"><span class="text-2xl font-black opacity-50">4</span><p class="text-[10px] uppercase mt-2">Touch</p></div>
+                    <div id="g-3" class="p-4 bg-white/5 rounded-2xl opacity-30 transition-all"><span class="text-2xl font-black opacity-50">3</span><p class="text-[10px] uppercase mt-2">Hear</p></div>
+                    <div id="g-2" class="p-4 bg-white/5 rounded-2xl opacity-30 transition-all"><span class="text-2xl font-black opacity-50">2</span><p class="text-[10px] uppercase mt-2">Smell</p></div>
+                    <div id="g-1" class="p-4 bg-white/5 rounded-2xl opacity-30 transition-all"><span class="text-2xl font-black opacity-50">1</span><p class="text-[10px] uppercase mt-2">Taste</p></div>
+                </div>
+                <button onclick="nextGrounding()" id="btn-ground" class="w-full md:w-auto px-8 py-3 border border-white/20 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-white hover:text-black transition">Start Grounding</button>
+            </div>
+        </section>
+
+
+        <section id="tab-execution" class="tab-content space-y-12">
+            <header class="mb-12">
+                <h2 class="text-[10px] font-black uppercase tracking-[0.5em] opacity-40 mb-2">Phase 02</h2>
+                <h3 class="text-5xl md:text-7xl font-black tracking-tighter italic serif">Chase the Fox</h3>
+                <p class="text-sm opacity-50 mt-4 max-w-xl font-mono uppercase">Your system cannot handle infinite priorities. Isolate the Fox. Everything else is a rabbit.</p>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="glass-panel p-8 md:p-12 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-2 mb-6">
+                            <i class="fas fa-bullseye text-state-orange"></i>
+                            <span class="text-[10px] font-black uppercase tracking-widest text-state-orange">Primary Lever</span>
+                        </div>
+                        <textarea id="input-fox" class="w-full bg-transparent border-none text-2xl font-light outline-none resize-none placeholder-white/20" placeholder="What is the ONE task that makes everything else easier?"></textarea>
+                    </div>
+                    <div class="mt-8 pt-8 border-t border-white/10">
+                        <input type="text" id="input-mvs" class="w-full bg-black/50 p-4 rounded-xl text-sm outline-none border border-white/5" placeholder="MVS (What is the 2-minute version of this task?)">
+                        <button onclick="saveExecution()" class="mt-4 w-full py-3 bg-white text-black font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-state-green transition">Lock Target</button>
+                    </div>
+                </div>
+
+                <div class="space-y-8">
+                    <div class="glass-panel p-8">
+                        <h4 class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-4">Identify the Bodyguard</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <button onclick="toggleBodyguard(this)" class="bg-white/5 p-4 rounded-xl text-left hover:bg-white/10 transition border border-transparent">
+                                <span class="block text-xs font-bold mb-1">Perfectionist</span>
+                                <span class="text-[9px] opacity-50 font-mono">Fear of failing</span>
+                            </button>
+                            <button onclick="toggleBodyguard(this)" class="bg-white/5 p-4 rounded-xl text-left hover:bg-white/10 transition border border-transparent">
+                                <span class="block text-xs font-bold mb-1">People Pleaser</span>
+                                <span class="text-[9px] opacity-50 font-mono">Fear of rejection</span>
+                            </button>
+                            <button onclick="toggleBodyguard(this)" class="bg-white/5 p-4 rounded-xl text-left hover:bg-white/10 transition border border-transparent">
+                                <span class="block text-xs font-bold mb-1">Burnout Spec.</span>
+                                <span class="text-[9px] opacity-50 font-mono">Fear of overload</span>
+                            </button>
+                        </div>
+                        <p class="text-[10px] italic opacity-40 mt-4 text-center">"Thank you for protecting me. I only need 2 minutes."</p>
+                    </div>
+
+                    <div class="glass-panel p-8 text-center flex flex-col items-center justify-center">
+                        <h4 class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-2">Flow State Engine</h4>
+                        <div id="exec-clock" class="text-6xl font-mono font-black tracking-tighter mb-6">25:00</div>
+                        <div class="flex gap-4">
+                            <button onclick="startFlowTimer(25)" class="px-6 py-2 border border-white/20 rounded-full text-xs font-bold hover:bg-white hover:text-black transition">25m Focus</button>
+                            <button onclick="startFlowTimer(2)" class="px-6 py-2 border border-white/20 rounded-full text-xs font-bold hover:bg-white hover:text-black transition text-state-orange">2m Landing</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <section id="tab-governor" class="tab-content space-y-12">
+            <header class="mb-12">
+                <h2 class="text-[10px] font-black uppercase tracking-[0.5em] opacity-40 mb-2">Phase 03</h2>
+                <h3 class="text-5xl md:text-7xl font-black tracking-tighter italic serif">The 70% Governor</h3>
+                <p class="text-sm opacity-50 mt-4 max-w-xl font-mono uppercase">If you use 100% capacity, you borrow energy from tomorrow. Leave 30% for the storm.</p>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="glass-panel p-12">
+                    <div class="flex justify-between mb-4">
+                        <span class="text-xs font-bold uppercase tracking-widest opacity-50">Current Output Target</span>
+                        <span id="gov-val-text" class="text-xl font-black text-state-green">70%</span>
+                    </div>
+                    <input type="range" id="gov-slider" min="10" max="100" value="70" class="w-full mb-8" oninput="updateGovernor(this.value)">
+                    
+                    <div class="p-6 bg-black/20 rounded-2xl border border-white/5 mt-8">
+                        <h4 class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-2">System Analysis</h4>
+                        <p id="gov-analysis" class="text-sm italic opacity-80 leading-relaxed">Optimal. The 30% buffer protects against the Day 3 crash.</p>
+                    </div>
+                </div>
+                <div class="glass-panel p-12 flex justify-center items-center">
+                    <div class="relative w-64 h-64">
+                        <canvas id="gov-chart"></canvas>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <span class="text-xs font-bold uppercase opacity-30">Buffer</span>
+                            <span id="gov-buffer-text" class="text-3xl font-mono font-black">30%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <section id="tab-logs" class="tab-content space-y-12">
+            <header class="mb-12">
+                <h2 class="text-[10px] font-black uppercase tracking-[0.5em] opacity-40 mb-2">Phase 04</h2>
+                <h3 class="text-5xl md:text-7xl font-black tracking-tighter italic serif">Memory Shield</h3>
+                <p class="text-sm opacity-50 mt-4 max-w-xl font-mono uppercase">Your brain is not storage. If it is not written, it does not exist during dysregulation. Clear the RAM.</p>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="glass-panel p-8">
+                    <h4 class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-4"><i class="fas fa-shield-alt mr-2"></i> Offload Data</h4>
+                    <textarea id="log-input" class="w-full h-32 bg-black/30 border border-white/10 rounded-xl p-4 text-sm outline-none resize-none mb-4" placeholder="Dump the noise, ideas, or log a tiny win..."></textarea>
+                    <div class="flex gap-4">
+                        <button onclick="saveLog('shield')" class="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold uppercase tracking-widest transition">Add to Shield</button>
+                        <button onclick="saveLog('win')" class="flex-1 py-3 bg-state-green/20 text-state-green hover:bg-state-green/40 rounded-xl text-xs font-bold uppercase tracking-widest transition border border-state-green/30">Log a Win</button>
+                    </div>
+                </div>
+                
+                <div class="glass-panel p-8 flex flex-col h-[500px]">
+                    <div class="flex justify-between items-center mb-6">
+                        <h4 class="text-[10px] font-black uppercase tracking-widest opacity-40">The Daily Ledger</h4>
+                        <button onclick="clearLogs()" class="text-[9px] uppercase text-state-red/60 hover:text-state-red transition">Wipe Data</button>
+                    </div>
+                    <div id="log-list" class="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+                        <div class="text-center opacity-30 italic text-sm mt-10">RAM is clear. No logs yet.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <section id="tab-anchors" class="tab-content space-y-12">
+            <header class="mb-12">
+                <h2 class="text-[10px] font-black uppercase tracking-[0.5em] opacity-40 mb-2">Phase 05</h2>
+                <h3 class="text-5xl md:text-7xl font-black tracking-tighter italic serif">Truth Anchors</h3>
+                <p class="text-sm opacity-50 mt-4 max-w-xl font-mono uppercase">When the system lies to you, do not negotiate. Use reference.</p>
+            </header>
+
+            <div class="glass-panel p-10 md:p-20 text-center relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-8 opacity-[0.03]"><i class="fas fa-anchor text-9xl"></i></div>
+                <div class="relative z-10 max-w-2xl mx-auto">
+                    <p class="text-[10px] font-black uppercase tracking-widest text-state-red mb-4">The Lie</p>
+                    <p id="anchor-lie" class="text-xl md:text-2xl font-medium opacity-80 mb-10 line-through decoration-state-red/50">"I am broken and unfixable."</p>
+                    
+                    <div class="h-px w-24 bg-white/20 mx-auto mb-10"></div>
+                    
+                    <p class="text-[10px] font-black uppercase tracking-widest text-state-blue mb-4">The Truth</p>
+                    <p id="anchor-truth" class="text-3xl md:text-5xl font-serif italic mb-6">"I am fearfully and wonderfully made; God does not make mistakes."</p>
+                    <p id="anchor-ref" class="text-xs font-mono opacity-50 mb-12">Psalm 139:14</p>
+                    
+                    <div class="flex flex-col sm:flex-row justify-center gap-4">
+                        <button onclick="nextAnchor()" class="px-8 py-3 bg-white text-black rounded-full text-xs font-bold uppercase tracking-widest hover:scale-105 transition">Next Anchor</button>
+                        <button onclick="triggerEmergencyFlare()" class="px-8 py-3 bg-state-orange/20 text-state-orange border border-state-orange/30 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-state-orange hover:text-black transition">Send Signal Flare</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div id="modal-panic" class="fixed inset-0 z-[999] bg-black/95 backdrop-blur-xl hidden flex-col items-center justify-center p-6 text-center">
+        <h1 class="text-8xl md:text-[12rem] font-black text-state-red mb-8 animate-pulse">STOP</h1>
+        <p class="text-2xl md:text-4xl font-light mb-12 max-w-2xl">You are in a physiological loop. You cannot think your way out.</p>
+        <div class="space-y-4 mb-16">
+            <p class="text-xl font-mono"><span class="opacity-50">1.</span> Splash ice-cold water on your face.</p>
+            <p class="text-xl font-mono"><span class="opacity-50">2.</span> Name 5 things you can see.</p>
+            <p class="text-xl font-mono"><span class="opacity-50">3.</span> This is a chemical wave. It will pass.</p>
+        </div>
+        <button onclick="document.getElementById('modal-panic').classList.add('hidden')" class="px-12 py-6 border-2 border-white rounded-full text-lg font-black uppercase tracking-widest hover:bg-white hover:text-black transition">I am Safe. Return.</button>
+    </div>
+<script>
+        // --- SYSTEM DATA DICTIONARY ---
+        const SYSTEM_STATES = {
+            yellow: { 
+                title: "Static (ADHD)", 
+                fix: "Reduce Input. Put on noise-canceling headphones. Turn off screens.", 
+                mvs: "Pick up ONE physical object from the floor and put it away. Ignore the rest." 
+            },
+            red: { 
+                title: "Heat (BPD/Rage)", 
+                fix: "Regulate. Do not speak. Splash ice-cold water on your face to trigger the dive reflex.", 
+                mvs: "Hold an ice cube until it melts. Wait out the 90-second chemical flush." 
+            },
+            orange: { 
+                title: "Threat (CPTSD)", 
+                fix: "Safeguard. Your brain thinks you are in the past. Prove you are safe right now.", 
+                mvs: "Use the 5-4-3-2-1 Grounding sequence below. Wrap yourself in a heavy blanket." 
+            },
+            purple: { 
+                title: "Pressure (GAD)", 
+                fix: "Simplify. You are simulating futures that don't exist. Stop time traveling.", 
+                mvs: "Write down the ONE thing you must do in the next 5 minutes. Nothing else exists." 
+            },
+            blue: { 
+                title: "Gravity (MDD)", 
+                fix: "Compassion. Your battery is at 0%. Enter power-save mode without guilt.", 
+                mvs: "Drink a glass of water. Move from the bed to the floor. Rest is the task." 
+            },
+            white: { 
+                title: "Fog (Shutdown)", 
+                fix: "Evacuation. Your Pre-Frontal Cortex is offline. Do not attempt logic.", 
+                mvs: "Sit up. Put your feet flat on the floor. Do nothing else." 
+            }
+        };
+
+        const ANCHORS = [
+            { lie: "I am broken and unfixable.", truth: "I am fearfully and wonderfully made; God does not make mistakes.", ref: "Psalm 139:14" },
+            { lie: "I am a burden to everyone.", truth: "I am sustained by God; He invites me to give Him my weight.", ref: "Psalm 55:22" },
+            { lie: "I am completely alone.", truth: "The Lord goes before me; He will never leave me nor forsake me.", ref: "Deuteronomy 31:8" },
+            { lie: "My mind is out of control.", truth: "For God has not given me a spirit of fear, but of power, love, and a sound mind.", ref: "2 Timothy 1:7" },
+            { lie: "I do not have the strength for this.", truth: "My grace is sufficient for you, for my power is made perfect in weakness.", ref: "2 Corinthians 12:9" }
+        ];
+
+        // --- CORE NAVIGATION ---
+        function switchTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            // Show target tab
+            document.getElementById('tab-' + tabId).classList.add('active');
+            
+            // Update Nav Buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active', 'text-white', 'opacity-100');
+            });
+            document.getElementById('nav-' + tabId).classList.add('active', 'text-white', 'opacity-100');
+        }
+
+        // --- CLOCK ---
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('nav-clock').innerText = now.toLocaleTimeString('en-US', { hour12: false });
+        }, 1000);
+
+        // --- TRIAGE & STATE ENGINE ---
+        function activateState(colorId) {
+            const data = SYSTEM_STATES[colorId];
+            const dash = document.getElementById('active-state-dash');
+            
+            // Update text
+            document.getElementById('dash-title').innerText = data.title;
+            document.getElementById('dash-title').className = `text-5xl font-black tracking-tighter mb-4 text-state-${colorId}`;
+            document.getElementById('dash-fix').innerText = data.fix;
+            document.getElementById('dash-mvs').innerText = data.mvs;
+            
+            // Change border/glow based on state
+            dash.className = `glass-panel p-8 md:p-16 border-2 transition-all duration-700 block fade-in border-state-${colorId}/30 shadow-[0_0_30px_rgba(var(--state-${colorId}),0.1)]`;
+            
+            dash.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // --- 90 SECOND FLUSH ---
+        let flushInterval;
+        function startFlush() {
+            clearInterval(flushInterval);
+            let time = 90;
+            const btn = document.getElementById('btn-flush');
+            const timerText = document.getElementById('breathe-timer');
+            const instruction = document.getElementById('breathe-instruction');
+            const circle = document.getElementById('breathe-circle');
+            
+            btn.innerText = "Flush Sequence Active...";
+            btn.classList.add('opacity-50', 'pointer-events-none');
+            circle.classList.add('pulse-ring');
+
+            flushInterval = setInterval(() => {
+                time--;
+                timerText.innerText = time;
+                
+                // Paced breathing instructions (4-7-8 roughly mapped to the 90s)
+                if (time % 19 > 15) instruction.innerText = "Inhale";
+                else if (time % 19 > 8) instruction.innerText = "Hold";
+                else instruction.innerText = "Exhale";
+
+                if (time <= 0) {
+                    clearInterval(flushInterval);
+                    timerText.innerText = "0";
+                    instruction.innerText = "Clear";
+                    circle.classList.remove('pulse-ring');
+                    btn.innerText = "Flush Complete. Take the MVS.";
+                    btn.classList.remove('opacity-50', 'pointer-events-none');
+                    btn.classList.replace('bg-white', 'bg-state-green');
+                    btn.classList.replace('text-black', 'text-white');
+                }
+            }, 1000);
+        }
+
+        // --- GROUNDING ---
+        let groundStep = 5;
+        function nextGrounding() {
+            const btn = document.getElementById('btn-ground');
+            if (groundStep === 5) {
+                // Reset all
+                for(let i=1; i<=5; i++) {
+                    document.getElementById('g-'+i).classList.replace('opacity-100', 'opacity-30');
+                    document.getElementById('g-'+i).classList.replace('scale-110', 'scale-100');
+                    document.getElementById('g-'+i).classList.remove('border', 'border-white/40');
+                }
+            }
+            
+            if (groundStep > 0) {
+                btn.innerText = `Acknowledge Step ${groundStep}`;
+                const el = document.getElementById('g-'+groundStep);
+                el.classList.replace('opacity-30', 'opacity-100');
+                el.classList.replace('scale-100', 'scale-110');
+                el.classList.add('border', 'border-white/40');
+                groundStep--;
+            } else {
+                btn.innerText = "Grounding Complete";
+                btn.classList.replace('hover:bg-white', 'hover:bg-state-green');
+                btn.classList.add('bg-state-green', 'text-white', 'border-state-green');
+                groundStep = 5; // Reset counter for next time
+            }
+        }
+
+        // --- EXECUTION (FOX & MVS) ---
+        function toggleBodyguard(btn) {
+            btn.classList.toggle('border-state-orange');
+            btn.classList.toggle('bg-state-orange/10');
+        }
+
+        function saveExecution() {
+            const fox = document.getElementById('input-fox').value;
+            const mvs = document.getElementById('input-mvs').value;
+            if (fox || mvs) {
+                localStorage.setItem('architect_fox', fox);
+                localStorage.setItem('architect_mvs', mvs);
+                alert("Target Locked. Focus solely on the MVS.");
+            }
+        }
+
+        let flowInterval;
+        function startFlowTimer(minutes) {
+            clearInterval(flowInterval);
+            let time = minutes * 60;
+            const display = document.getElementById('exec-clock');
+            
+            flowInterval = setInterval(() => {
+                time--;
+                let m = Math.floor(time / 60);
+                let s = time % 60;
+                display.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                
+                if (time <= 0) {
+                    clearInterval(flowInterval);
+                    display.innerText = "00:00";
+                    alert("Phase Complete. Initiate 2-minute transition/landing protocol.");
+                }
+            }, 1000);
+        }
+
+        // --- CHART.JS GOVERNOR ---
+        let govChart;
+        function initGovernorChart() {
+            const ctx = document.getElementById('gov-chart').getContext('2d');
+            govChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Output', 'Buffer'],
+                    datasets: [{
+                        data: [70, 30],
+                        backgroundColor: ['#10b981', 'rgba(255,255,255,0.05)'], // Green and transparent
+                        borderWidth: 0,
+                        cutout: '85%'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { tooltip: { enabled: false }, legend: { display: false } },
+                    animation: { duration: 500 }
+                }
+            });
+        }
+
+        function updateGovernor(val) {
+            document.getElementById('gov-val-text').innerText = val + '%';
+            document.getElementById('gov-buffer-text').innerText = (100 - val) + '%';
+            
+            let color = '#10b981'; // Green
+            let analysis = "Optimal. The 30% buffer protects against the Day 3 crash.";
+            
+            if (val > 85) {
+                color = '#ef4444'; // Red
+                analysis = "CRITICAL WARNING: Redlining. You are borrowing energy from tomorrow. High risk of biological shutdown.";
+            } else if (val > 70) {
+                color = '#facc15'; // Yellow
+                analysis = "Caution: Elevated output. Ensure strict Sleep Docking tonight to recover buffer.";
+            }
+
+            document.getElementById('gov-val-text').style.color = color;
+            document.getElementById('gov-analysis').innerText = analysis;
+
+            if (govChart) {
+                govChart.data.datasets[0].data = [val, 100 - val];
+                govChart.data.datasets[0].backgroundColor[0] = color;
+                govChart.update();
+            }
+        }
+
+        // --- MEMORY SHIELD & LOGS ---
+        function saveLog(type) {
+            const input = document.getElementById('log-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const logs = JSON.parse(localStorage.getItem('architect_logs') || '[]');
+            logs.unshift({
+                text: text,
+                type: type, // 'shield' or 'win'
+                time: new Date().toLocaleString()
+            });
+            localStorage.setItem('architect_logs', JSON.stringify(logs));
+            input.value = '';
+            renderLogs();
+        }
+
+        function renderLogs() {
+            const logs = JSON.parse(localStorage.getItem('architect_logs') || '[]');
+            const list = document.getElementById('log-list');
+            
+            if (logs.length === 0) {
+                list.innerHTML = '<div class="text-center opacity-30 italic text-sm mt-10">RAM is clear. No logs yet.</div>';
+                return;
+            }
+
+            list.innerHTML = logs.map(log => `
+                <div class="p-4 rounded-xl border ${log.type === 'win' ? 'bg-state-green/10 border-state-green/20' : 'bg-white/5 border-white/10'}">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[9px] font-black uppercase tracking-widest opacity-50">${log.type === 'win' ? 'WIN LOGGED' : 'RAM OFFLOAD'}</span>
+                        <span class="text-[9px] font-mono opacity-40">${log.time}</span>
+                    </div>
+                    <p class="text-sm opacity-90">${log.text}</p>
+                </div>
+            `).join('');
+        }
+
+        function clearLogs() {
+            if(confirm("Are you sure you want to wipe the Memory Shield?")) {
+                localStorage.removeItem('architect_logs');
+                renderLogs();
+            }
+        }
+
+        // --- IDENTITY ANCHORS ---
+        let anchorIndex = 0;
+        function nextAnchor() {
+            anchorIndex = (anchorIndex + 1) % ANCHORS.length;
+            const a = ANCHORS[anchorIndex];
+            
+            const truthEl = document.getElementById('anchor-truth');
+            truthEl.classList.remove('fade-in');
+            void truthEl.offsetWidth; // Trigger reflow
+            truthEl.classList.add('fade-in');
+
+            document.getElementById('anchor-lie').innerText = `"${a.lie}"`;
+            truthEl.innerText = `"${a.truth}"`;
+            document.getElementById('anchor-ref').innerText = a.ref;
+        }
+
+        function triggerEmergencyFlare() {
+            const text = "SIGNAL FLARE: I am currently experiencing an acute overload and my processing capacity has shut down. I am safe, but I cannot communicate logically right now. Please allow me space to regulate.";
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Emergency script copied to clipboard. Paste this into your messages.");
+            });
+        }
+
+        // --- PANIC MODE ---
+        function triggerPanic() {
+            document.getElementById('modal-panic').classList.remove('hidden');
+            document.getElementById('modal-panic').classList.add('flex');
+        }
+
+        // --- INITIALIZATION ---
+        window.onload = () => {
+            initGovernorChart();
+            renderLogs();
+            
+            // Restore Fox if it exists
+            const savedFox = localStorage.getItem('architect_fox');
+            const savedMvs = localStorage.getItem('architect_mvs');
+            if (savedFox) document.getElementById('input-fox').value = savedFox;
+            if (savedMvs) document.getElementById('input-mvs').value = savedMvs;
+        };
+
+    </script>
+</body>
+</html>
