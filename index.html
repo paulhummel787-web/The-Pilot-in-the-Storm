@@ -3,345 +3,267 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Architect OS | Bee Well v22.0</title>
+    <title>Architect OS | Master Command Center</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
 
         :root {
-            --yellow: #facc15; --red: #ef4444; --orange: #fb923c;
-            --purple: #8b5cf6; --blue: #3b82f6; --green: #10b981;
+            /* State Colors */
+            --yellow: #facc15;  /* Static / ADHD */
+            --red: #ef4444;     /* Heat / BPD */
+            --orange: #fb923c;  /* Threat / CPTSD */
+            --purple: #8b5cf6;  /* Pressure / Anxiety */
+            --blue: #3b82f6;    /* Gravity / Depression */
+            --green: #10b981;   /* Flow / Regulated */
+            
             --bg-base: #0a0a0a;
+            --panel-glass: rgba(255, 255, 255, 0.05);
         }
 
         body {
-            background: var(--bg-base);
-            color: #f8fafc;
+            background-color: var(--bg-base);
+            color: #e2e8f0;
             font-family: 'Inter', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-            transition: background 0.5s ease;
+            transition: all 0.5s ease;
+            overflow-x: hidden;
         }
 
         .glass {
-            background: rgba(255, 255, 255, 0.03);
+            background: var(--panel-glass);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.25rem;
         }
 
         .state-btn {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.2s, filter 0.2s;
+            filter: grayscale(0.4) opacity(0.7);
         }
 
-        .state-btn:active { transform: scale(0.92); }
+        .state-btn.active {
+            filter: grayscale(0) opacity(1);
+            transform: scale(1.05);
+            border-color: currentColor;
+        }
 
-        /* Module Tabs Navigation */
-        .nav-active { color: var(--green); border-bottom: 2px solid var(--green); }
-        
-        /* Terminal Theme */
-        .terminal-font { font-family: 'JetBrains Mono', monospace; }
-        
-        /* Progress Ring */
-        .progress-ring { transition: stroke-dashoffset 0.35s; transform: rotate(-90deg); transform-origin: 50% 50%; }
+        /* Ambient Background Blobs */
+        .blob {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.15;
+            transition: background 1s ease;
+        }
 
-        /* Animations */
-        @keyframes pulse-soft { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.8; } }
-        .pulse-view { animation: pulse-soft 3s infinite; }
+        #timer-display {
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: -2px;
+        }
     </style>
 </head>
+
 <body class="p-4 md:p-8">
+    <div class="blob top-[-10%] left-[-10%] bg-indigo-600" id="blob-1"></div>
+    <div class="blob bottom-[-10%] right-[-10%] bg-blue-900" id="blob-2"></div>
 
-    <header class="flex justify-between items-center mb-8">
-        <div>
-            <h1 class="text-2xl font-extrabold tracking-tighter text-white uppercase">Architect OS <span class="text-xs text-gray-500 font-mono">v22.0</span></h1>
-            <p id="pilot-status" class="text-xs text-green-400 font-mono tracking-widest">PILOT ONLINE // STABLE</p>
-        </div>
-        <div class="flex gap-3">
-            <button onclick="toggleSpiritualMode()" id="spirit-toggle" class="glass px-3 py-1 text-[10px] uppercase tracking-widest text-gray-400">Spiritual: Off</button>
-            <div id="governor-badge" class="glass px-3 py-1 text-[10px] text-yellow-500 font-bold uppercase">70% Governor</div>
-        </div>
-    </header>
-
-    <nav class="flex gap-6 overflow-x-auto pb-4 mb-6 no-scrollbar text-[11px] uppercase tracking-widest font-bold border-b border-white/10">
-        <button onclick="setModule('cockpit')" class="nav-link nav-active whitespace-nowrap" id="nav-cockpit">Cockpit</button>
-        <button onclick="setModule('regulation')" class="nav-link whitespace-nowrap" id="nav-regulation">Regulation</button>
-        <button onclick="setModule('execution')" class="nav-link whitespace-nowrap" id="nav-execution">Execution</button>
-        <button onclick="setModule('integration')" class="nav-link whitespace-nowrap" id="nav-integration">Integration</button>
-        <button onclick="setModule('sanctuary')" class="nav-link whitespace-nowrap" id="nav-sanctuary">Sanctuary</button>
-    </nav>
-
-    <main id="app-view">
-        <section id="mod-cockpit" class="space-y-6">
-            <div class="glass p-6 text-center space-y-4">
-                <p class="text-[10px] uppercase tracking-[0.2em] text-gray-500">Current State Recognition</p>
-                <div class="grid grid-cols-5 gap-3">
-                    <button onclick="triggerReset('yellow')" class="state-btn w-full h-12 rounded-lg bg-yellow-400/20 border border-yellow-400/40" title="Static / ADHD"></button>
-                    <button onclick="triggerReset('red')" class="state-btn w-full h-12 rounded-lg bg-red-500/20 border border-red-500/40" title="Heat / BPD"></button>
-                    <button onclick="triggerReset('orange')" class="state-btn w-full h-12 rounded-lg bg-orange-400/20 border border-orange-400/40" title="Threat / CPTSD"></button>
-                    <button onclick="triggerReset('purple')" class="state-btn w-full h-12 rounded-lg bg-purple-500/20 border border-purple-500/40" title="Pressure / GAD"></button>
-                    <button onclick="triggerReset('blue')" class="state-btn w-full h-12 rounded-lg bg-blue-500/20 border border-blue-500/40" title="Gravity / MDD"></button>
-                </div>
+    <main class="max-w-4xl mx-auto space-y-6">
+        
+        <header class="flex justify-between items-end border-b border-white/10 pb-4">
+            <div>
+                <h1 class="text-2xl font-extrabold tracking-tight">ARCHITECT <span class="text-indigo-400">OS</span></h1>
+                <p class="text-xs text-white/40 uppercase tracking-widest" id="system-path">Pilot // The-Pilot // v21.0</p>
             </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div class="glass p-4 text-center">
-                    <div class="text-[10px] text-gray-500 uppercase mb-2">System Load</div>
-                    <canvas id="govChart" width="100" height="100"></canvas>
-                </div>
-                <div class="glass p-4 flex flex-col justify-center items-center">
-                    <div class="text-[10px] text-gray-500 uppercase mb-2">90s Flush</div>
-                    <div id="flush-timer" class="text-3xl font-bold font-mono">90</div>
-                    <button onclick="startFlush()" class="mt-2 text-[9px] uppercase border border-white/20 px-2 py-1 rounded">Start</button>
-                </div>
+            <div class="text-right">
+                <div class="text-3xl font-bold" id="clock">00:00</div>
+                <div class="text-[10px] text-green-400 font-mono" id="sync-status">● SYSTEM_NOMINAL</div>
             </div>
+        </header>
 
-            <div class="glass p-4 space-y-2">
-                <div class="text-[10px] text-gray-500 uppercase flex justify-between">
-                    <span>Active Protocol</span>
-                    <span id="protocol-name" class="text-white">None</span>
-                </div>
-                <p id="protocol-desc" class="text-sm text-gray-300 italic">Fix the state before taking the step.</p>
-            </div>
+        <section class="grid grid-cols-5 gap-3">
+            <button onclick="setState('yellow')" class="state-btn glass p-4 text-center border-b-4 border-transparent" style="color: var(--yellow);">
+                <i class="fa-solid fa-bolt mb-2"></i><span class="block text-[10px] font-bold">STATIC</span>
+            </button>
+            <button onclick="setState('red')" class="state-btn glass p-4 text-center border-b-4 border-transparent" style="color: var(--red);">
+                <i class="fa-solid fa-fire-flame-curved mb-2"></i><span class="block text-[10px] font-bold">HEAT</span>
+            </button>
+            <button onclick="setState('orange')" class="state-btn glass p-4 text-center border-b-4 border-transparent" style="color: var(--orange);">
+                <i class="fa-solid fa-shield-halved mb-2"></i><span class="block text-[10px] font-bold">THREAT</span>
+            </button>
+            <button onclick="setState('purple')" class="state-btn glass p-4 text-center border-b-4 border-transparent" style="color: var(--purple);">
+                <i class="fa-solid fa-brain mb-2"></i><span class="block text-[10px] font-bold">PRESSURE</span>
+            </button>
+            <button onclick="setState('blue')" class="state-btn glass p-4 text-center border-b-4 border-transparent" style="color: var(--blue);">
+                <i class="fa-solid fa-anchor mb-2"></i><span class="block text-[10px] font-bold">GRAVITY</span>
+            </button>
         </section>
 
-        <section id="mod-regulation" class="hidden space-y-4">
-            <div class="glass p-6">
-                <div id="grounding-step-view" class="space-y-4">
-                    <h2 id="gr-phase" class="text-xs uppercase tracking-widest text-green-400">Descent</h2>
-                    <p id="gr-question" class="text-xl font-medium">What is my current "mental weather"?</p>
-                    <p id="gr-purpose" class="text-xs text-gray-500 italic">Map the landscape.</p>
-                    <div class="flex gap-2 mt-6">
-                        <button onclick="prevGrounding()" class="glass flex-1 py-3 text-xs uppercase">Prev</button>
-                        <button onclick="nextGrounding()" class="bg-white text-black flex-1 py-3 text-xs font-bold uppercase rounded-xl">Next</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="mod-execution" class="hidden space-y-6">
-            <div class="glass p-6">
-                <h2 class="text-xs uppercase tracking-widest mb-4">The Fox (Daily Focus)</h2>
-                <input type="text" id="fox-input" placeholder="Enter your ONE main objective..." class="w-full bg-transparent border-b border-white/20 py-2 focus:outline-none focus:border-green-400">
-            </div>
+        <div class="grid md:grid-cols-2 gap-6">
             
-            <div class="glass p-6">
-                <h2 class="text-xs uppercase tracking-widest mb-4 text-gray-500">Maintenance Checklist</h2>
-                <div id="checklist-container" class="space-y-3">
-                    </div>
-            </div>
-        </section>
-
-        <section id="mod-integration" class="hidden space-y-4">
-            <div class="glass p-4 overflow-x-auto">
-                <table class="w-full text-[10px] terminal-font uppercase">
-                    <thead>
-                        <tr class="border-b border-white/10">
-                            <th class="text-left py-2">Symptom</th>
-                            <th>ADHD</th><th>BPD</th><th>CPTSD</th>
-                        </tr>
-                    </thead>
-                    <tbody id="symptom-table">
-                        </tbody>
-                </table>
-            </div>
-        </section>
-
-        <section id="mod-sanctuary" class="hidden space-y-4">
-            <div class="glass p-8 text-center space-y-6">
-                <i class="fa-solid fa-cloud-moon text-4xl text-blue-300 opacity-50"></i>
-                <div id="sanctuary-text" class="italic text-gray-400">
-                    "You are a Pilot, not the Storm."
+            <div class="glass p-6 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-white/60">Current Protocol</h2>
+                    <span id="state-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-white/10">SELECT STATE</span>
                 </div>
-                <button class="glass px-6 py-2 text-xs uppercase">Play White Noise</button>
+                <div id="protocol-content" class="min-h-[120px] text-lg font-medium leading-relaxed">
+                    Awaiting state selection...
+                </div>
+                <button onclick="triggerMVS()" class="w-full py-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold border border-white/10 transition-all">
+                    EXECUTE MVS (Minimum Viable Step)
+                </button>
+            </div>
+
+            <div class="glass p-6 flex flex-col items-center justify-center relative">
+                <canvas id="waveChart" width="200" height="200"></canvas>
+                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span class="text-4xl font-black" id="wave-value">70</span>
+                    <span class="text-[10px] text-white/40 font-mono">GOVERNOR</span>
+                </div>
+                <input type="range" min="0" max="100" value="70" class="w-full mt-4 accent-indigo-500" oninput="updateWave(this.value)">
+            </div>
+
+        </div>
+
+        <section class="grid md:grid-cols-3 gap-6">
+            <div class="md:col-span-2 glass p-6">
+                <h2 class="text-sm font-bold mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-bullseye text-indigo-400"></i> THE FOX (Main Objective)
+                </h2>
+                <div class="flex gap-2">
+                    <input type="text" id="fox-input" placeholder="Set today's primary lever..." class="flex-1 bg-white/5 border border-white/10 rounded-lg p-3 text-sm focus:outline-none focus:border-indigo-500">
+                    <button onclick="saveFox()" class="px-4 bg-indigo-600 rounded-lg text-sm font-bold hover:bg-indigo-500 transition-colors">SET</button>
+                </div>
+                <div id="fox-display" class="mt-4 text-xl font-bold italic text-white/80"></div>
+            </div>
+
+            <div class="glass p-6 flex flex-col items-center justify-center">
+                <div class="text-[10px] font-bold text-white/40 mb-2 uppercase">Flow Timer</div>
+                <div id="timer-display" class="text-4xl font-bold mb-4">25:00</div>
+                <button id="timer-btn" onclick="toggleTimer()" class="px-6 py-2 bg-white text-black rounded-full font-bold text-xs">START</button>
             </div>
         </section>
-    </main>
 
-    <div id="reset-overlay" class="fixed inset-0 bg-black/95 z-[100] hidden flex flex-col items-center justify-center p-8 text-center">
-        <h1 id="reset-title" class="text-4xl font-black mb-4 uppercase"></h1>
-        <p id="reset-text" class="text-lg mb-8 italic"></p>
-        <button onclick="closeReset()" class="glass px-8 py-3 text-xs uppercase tracking-widest">Acknowledge</button>
-    </div>
+    </main>
 
     <script>
         /* =========================
-           DATA CONFIGURATION
+           OS DATA & LOGIC
            ========================= */
-        const APP_STATE = {
-            spiritualMode: false,
-            currentModule: 'cockpit',
-            groundingIndex: 0,
-            governor: 70
+        const PROTOCOLS = {
+            yellow: { badge: "STATIC", text: "System Noise detected. Reduce inputs. Put on brown noise. Simplify the next task to one sentence.", color: "#facc15" },
+            red: { badge: "HEAT", text: "Emotional Spike. 90-second flush active. Splash cold water on face. Do not speak. Do not send messages.", color: "#ef4444" },
+            orange: { badge: "THREAT", text: "Survival mode active. 5-4-3-2-1 Grounding: Name 5 things you see. You are physically safe.", color: "#fb923c" },
+            purple: { badge: "PRESSURE", text: "Logic Loop detected. Externalize thoughts. Open a notepad and dump every worry. Stop trying to solve inside your head.", color: "#8b5cf6" },
+            blue: { badge: "GRAVITY", text: "System Shutdown. Battery low. Hydrate. Lie on the floor for 5 minutes. No expectations of performance.", color: "#3b82f6" }
         };
 
-        const GROUNDING_TOOL = [
-            { phase: 'DESCENT', step: 'Horizon', question: 'What is my current mental weather?', purpose: 'Map the landscape.' },
-            { phase: 'DESCENT', step: 'Filter', question: 'Is this noise (fear/trauma) or signal (immediate need)?', purpose: 'Isolate the true need.' },
-            { phase: 'DESCENT', step: 'Pinpoint', question: 'What is the one tiny, kind act I can do right now?', purpose: 'Find the "Fox" (the lever).' },
-            { phase: 'ASCENT', step: 'Why', question: 'Is this reaction from the present or a past trigger?', purpose: 'Identify the root cause.' },
-            { phase: 'ASCENT', step: 'Ripple', question: 'If I do this tiny act, how does it shift my next hour?', purpose: 'See the system impact.' },
-            { phase: 'ASCENT', step: 'Shadow', question: 'What is my brain trying to protect me from?', purpose: 'Practice self-compassion.' },
-            { phase: 'ASCENT', step: 'Summit', question: 'What is one wise truth I can hold for myself?', purpose: 'Gain perspective.' },
-            { phase: 'LOOP', step: 'So What?', question: 'What am I giving myself permission to stop doing today?', purpose: 'Strategic relief.' },
-            { phase: 'LOOP', step: 'Re-entry', question: 'How does this help me move into the next part of the day?', purpose: 'Close the loop.' }
-        ];
-
-        const CHECKLIST = [
-            { task: 'Drink a glass of water', cat: 'Physical' },
-            { task: 'Step outside for 5 mins', cat: 'Physical' },
-            { task: '5 mins of stretching', cat: 'Physical' },
-            { task: 'Write 1 thing grateful for', cat: 'Mental' },
-            { task: 'Deep breathing (4-4-4)', cat: 'Mental' }
-        ];
-
-        const RESET_PROTOCOLS = {
-            yellow: { title: "Static", action: "Reduce inputs. Simplify task. Headphones + Brown Noise." },
-            red: { title: "Heat", action: "COLD WATER SHOCK. Stop talking. 90-second flush." },
-            orange: { title: "Threat", action: "Physical grounding. Heavy blanket. You are safe." },
-            purple: { title: "Pressure", action: "Write it down. Externalize the memory shield." },
-            blue: { title: "Gravity", action: "Rest. Hydrate. Move one toe. Minimal action." }
+        let appState = {
+            current: null,
+            wave: 70,
+            timer: null,
+            timerActive: false,
+            timeLeft: 1500
         };
-
-        const RESEARCH_DATA = [
-            { sym: 'Distractibility', adhd: '✓', bpd: '', cptsd: '' },
-            { sym: 'Dysregulation', adhd: '', bpd: '✓', cptsd: '✓' },
-            { sym: 'Hypervigilance', adhd: '', bpd: '', cptsd: '✓' },
-            { sym: 'Impulsivity', adhd: '✓', bpd: '✓', cptsd: '' }
-        ];
 
         /* =========================
-           SYSTEM LOGIC
+           CORE FUNCTIONS
            ========================= */
-
-        function setModule(mod) {
-            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
-            document.getElementById(`mod-${mod}`).classList.remove('hidden');
-            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('nav-active'));
-            document.getElementById(`nav-${mod}`).classList.add('nav-active');
-            APP_STATE.currentModule = mod;
-            if(mod === 'execution') renderChecklist();
-            if(mod === 'integration') renderIntegration();
-        }
-
-        function triggerReset(state) {
-            const proto = RESET_PROTOCOLS[state];
-            document.getElementById('reset-title').innerText = proto.title;
-            document.getElementById('reset-title').style.color = `var(--${state})`;
-            document.getElementById('reset-text').innerText = proto.action;
-            document.getElementById('reset-overlay').classList.remove('hidden');
-            document.getElementById('protocol-name').innerText = proto.title;
-            document.getElementById('protocol-desc').innerText = proto.action;
-            updateGovernor(90); // State spikes load
-        }
-
-        function closeReset() {
-            document.getElementById('reset-overlay').classList.add('hidden');
-            setTimeout(() => updateGovernor(70), 5000); // Gradual return
-        }
-
-        function startFlush() {
-            let count = 90;
-            const el = document.getElementById('flush-timer');
-            const timer = setInterval(() => {
-                count--;
-                el.innerText = count;
-                if(count <= 0) {
-                    clearInterval(timer);
-                    el.innerText = "90";
-                    alert("Chemical Flush Complete. Brain clearing.");
-                }
-            }, 1000);
-        }
-
-        function toggleSpiritualMode() {
-            APP_STATE.spiritualMode = !APP_STATE.spiritualMode;
-            const btn = document.getElementById('spirit-toggle');
-            btn.innerText = APP_STATE.spiritualMode ? "Spiritual: On" : "Spiritual: Off";
-            btn.style.color = APP_STATE.spiritualMode ? "var(--purple)" : "";
+        function setState(stateKey) {
+            appState.current = stateKey;
+            const data = PROTOCOLS[stateKey];
             
-            // Example of shifting language
-            document.getElementById('sanctuary-text').innerText = APP_STATE.spiritualMode 
-                ? "“Be still, and know that you are held.”" 
-                : "“You are a Pilot, not the Storm.”";
+            // UI Updates
+            document.querySelectorAll('.state-btn').forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            document.getElementById('protocol-content').innerText = data.text;
+            document.getElementById('state-badge').innerText = data.badge;
+            document.getElementById('state-badge').style.color = data.color;
+            
+            // Ambient shift
+            document.getElementById('blob-1').style.background = data.color;
         }
 
-        function updateGovernor(val) {
-            APP_STATE.governor = val;
-            window.govChart.data.datasets[0].data = [val, 100 - val];
-            window.govChart.data.datasets[0].backgroundColor[0] = val > 75 ? '#ef4444' : '#10b981';
-            window.govChart.update();
+        function updateWave(val) {
+            appState.wave = val;
+            document.getElementById('wave-value').innerText = val;
+            waveChart.data.datasets[0].data = [val, 100 - val];
+            
+            // Color shift based on governor
+            if (val > 80) waveChart.data.datasets[0].backgroundColor[0] = '#ef4444';
+            else waveChart.data.datasets[0].backgroundColor[0] = '#6366f1';
+            
+            waveChart.update();
         }
 
-        function renderChecklist() {
-            const container = document.getElementById('checklist-container');
-            container.innerHTML = CHECKLIST.map((item, i) => `
-                <div class="flex items-center gap-3 p-3 glass bg-white/5 rounded-xl">
-                    <input type="checkbox" class="w-5 h-5 accent-green-400">
-                    <div class="flex-1">
-                        <p class="text-sm">${item.task}</p>
-                        <p class="text-[9px] text-gray-500 uppercase">${item.cat}</p>
-                    </div>
-                </div>
-            `).join('');
+        function saveFox() {
+            const val = document.getElementById('fox-input').value;
+            document.getElementById('fox-display').innerText = `"${val}"`;
+            document.getElementById('fox-input').value = "";
         }
 
-        function renderIntegration() {
-            const container = document.getElementById('symptom-table');
-            container.innerHTML = RESEARCH_DATA.map(r => `
-                <tr class="border-b border-white/5">
-                    <td class="py-3 text-gray-400">${r.sym}</td>
-                    <td class="text-center">${r.adhd}</td>
-                    <td class="text-center">${r.bpd}</td>
-                    <td class="text-center">${r.cptsd}</td>
-                </tr>
-            `).join('');
-        }
-
-        function nextGrounding() {
-            if(APP_STATE.groundingIndex < GROUNDING_TOOL.length - 1) {
-                APP_STATE.groundingIndex++;
-                updateGroundingUI();
-            }
-        }
-
-        function prevGrounding() {
-            if(APP_STATE.groundingIndex > 0) {
-                APP_STATE.groundingIndex--;
-                updateGroundingUI();
-            }
-        }
-
-        function updateGroundingUI() {
-            const step = GROUNDING_TOOL[APP_STATE.groundingIndex];
-            document.getElementById('gr-phase').innerText = step.phase;
-            document.getElementById('gr-question').innerText = step.question;
-            document.getElementById('gr-purpose').innerText = step.purpose;
+        function triggerMVS() {
+            alert("Minimum Viable Step: Do the 2-minute version of your objective. Just open the document or stand up. Lower the bar until you can clear it.");
         }
 
         /* =========================
-           INIT
+           TIMER SYSTEM
            ========================= */
-        window.onload = () => {
-            const ctx = document.getElementById('govChart').getContext('2d');
-            window.govChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    datasets: [{
-                        data: [70, 30],
-                        backgroundColor: ['#10b981', '#1a1a1a'],
-                        borderWidth: 0,
-                        circumference: 180,
-                        rotation: 270
-                    }]
-                },
-                options: { cutout: '85%', plugins: { legend: { display: false } } }
-            });
-            updateGroundingUI();
-        };
+        function toggleTimer() {
+            if (appState.timerActive) {
+                clearInterval(appState.timer);
+                document.getElementById('timer-btn').innerText = "START";
+            } else {
+                appState.timer = setInterval(updateTimer, 1000);
+                document.getElementById('timer-btn').innerText = "PAUSE";
+            }
+            appState.timerActive = !appState.timerActive;
+        }
+
+        function updateTimer() {
+            if (appState.timeLeft <= 0) {
+                clearInterval(appState.timer);
+                alert("Session Complete. Resetting state.");
+                return;
+            }
+            appState.timeLeft--;
+            const m = Math.floor(appState.timeLeft / 60);
+            const s = appState.timeLeft % 60;
+            document.getElementById('timer-display').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        /* =========================
+           CHART INITIALIZATION
+           ========================= */
+        const ctx = document.getElementById('waveChart').getContext('2d');
+        const waveChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [70, 30],
+                    backgroundColor: ['#6366f1', 'rgba(255,255,255,0.05)'],
+                    borderWidth: 0,
+                    circumference: 180,
+                    rotation: 270,
+                    cutout: '85%'
+                }]
+            },
+            options: {
+                responsive: false,
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // Clock
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }, 1000);
     </script>
 </body>
 </html>
