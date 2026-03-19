@@ -463,6 +463,44 @@
         }
 
         window.onload = initApp;
+        /* ==========================================================================
+   NEURAL PACER (Breathing Logic)
+   ========================================================================== */
+function togglePacer(state) {
+    const ring = document.getElementById('sanity-ring');
+    if (['red', 'orange', 'purple'].includes(state)) {
+        ring.classList.add('pacer-active'); // Add CSS animation for 4-7-8 expansion
+        logSystemEvent("NEURAL PACER: Active. Synchronize breath to pulse.");
+    } else {
+        ring.classList.remove('pacer-active');
+    }
+}
+
+/* ==========================================================================
+   SYSTEM TELEMETRY (The Black Box)
+   ========================================================================== */
+function exportSystemLog() {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", `architect_telemetry_${Date.now()}.json`);
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+    logSystemEvent("TELEMETRY: System snapshot exported to disk.");
+}
+
+/* ==========================================================================
+   CIRCADIAN THEME LOGIC
+   ========================================================================== */
+function applyCircadianTheme() {
+    const hour = new Date().getHours();
+    const body = document.getElementById('app-body');
+    if (hour >= 20 || hour < 6) {
+        body.classList.add('low-blue-light'); // CSS filter: sepia(0.2)
+        logSystemEvent("ENVIRONMENT: Night Mode / Circadian Protection Active.");
+    }
+}
     </script>
 </body>
 </html>
