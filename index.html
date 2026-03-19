@@ -3,48 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Architect OS | Zion Edition</title>
+    <title>Architect OS | The Archive of Zion</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --purple: #818cf8; --gold: #fbbf24; --red: #f87171;
             --blue: #60a5fa; --green: #34d399; --orange: #fb923c;
-            --bg: #030303;
+            --bg: #020202;
         }
-        body { background: var(--bg); color: white; font-family: 'Inter', system-ui, sans-serif; overflow-x: hidden; transition: 0.5s; }
-        .glass { background: rgba(255,255,255,0.01); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.06); }
-        .bg-blob { position: fixed; width: 700px; height: 700px; filter: blur(140px); opacity: 0.1; z-index: -1; transition: 2s ease-in-out; border-radius: 50%; }
-        .terminal-text { font-family: 'Courier New', monospace; color: #00ff88; }
-        .custom-scroll::-webkit-scrollbar { width: 3px; }
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; transition: 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+        .glass { background: rgba(255,255,255,0.01); backdrop-filter: blur(30px); border: 1px solid rgba(255,255,255,0.05); }
+        .bg-blob { position: fixed; width: 800px; height: 800px; filter: blur(150px); opacity: 0.08; z-index: -1; transition: 2s; border-radius: 50%; }
+        .zion-text { color: #fbbf24; text-shadow: 0 0 15px rgba(251, 191, 36, 0.2); }
+        .custom-scroll::-webkit-scrollbar { width: 2px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
-        .zion-gold { color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.3); }
+        .chapter-node:hover { background: rgba(255,255,255,0.03); transform: translateX(5px); }
     </style>
 </head>
-<body class="p-4 md:p-10 min-h-screen">
+<body class="p-4 md:p-12 min-h-screen">
 
-    <div id="blob1" class="bg-blob top-[-25%] left-[-15%] bg-indigo-900"></div>
-    <div id="blob2" class="bg-blob bottom-[-25%] right-[-15%] bg-amber-900"></div>
+    <div id="blob1" class="bg-blob top-[-30%] left-[-20%] bg-blue-900"></div>
+    <div id="blob2" class="bg-blob bottom-[-30%] right-[-20%] bg-amber-900"></div>
 
-    <div class="max-w-7xl mx-auto space-y-8">
-        <nav class="glass rounded-[2rem] p-6 flex flex-col lg:flex-row justify-between items-center gap-6 sticky top-6 z-50">
-            <div class="flex items-center gap-5">
-                <div id="state-indicator" class="w-5 h-5 rounded-full bg-yellow-400 shadow-[0_0_20px_#fbbf24] transition-all duration-1000"></div>
+    <div class="max-w-7xl mx-auto space-y-10">
+        <nav class="glass rounded-[2.5rem] p-8 flex flex-col xl:flex-row justify-between items-center gap-8 sticky top-6 z-50">
+            <div class="flex items-center gap-6">
+                <div id="state-indicator" class="w-6 h-6 rounded-full bg-yellow-400 shadow-[0_0_25px_#fbbf24] transition-all duration-1000"></div>
                 <div>
-                    <h1 class="font-black tracking-tighter text-2xl uppercase italic leading-none">Architect <span class="opacity-20 not-italic text-sm">OS</span></h1>
-                    <p class="text-[10px] uppercase tracking-[0.4em] opacity-40 mt-1">Navigation & Zion Registry</p>
+                    <h1 class="font-black tracking-tighter text-3xl uppercase italic leading-none">Architect <span class="opacity-20 not-italic text-sm">OS</span></h1>
+                    <p class="text-[10px] uppercase tracking-[0.5em] opacity-40 mt-2" id="system-status">System Initialized: Optimal</p>
                 </div>
             </div>
             
-            <div class="flex gap-3 p-1.5 bg-white/5 rounded-full border border-white/10">
-                <button onclick="setSystemColor('yellow')" class="w-8 h-8 rounded-full bg-amber-400 hover:scale-110 transition shadow-lg"></button>
-                <button onclick="setSystemColor('red')" class="w-8 h-8 rounded-full bg-red-500 hover:scale-110 transition shadow-lg"></button>
-                <button onclick="setSystemColor('orange')" class="w-8 h-8 rounded-full bg-orange-500 hover:scale-110 transition shadow-lg"></button>
-                <button onclick="setSystemColor('purple')" class="w-8 h-8 rounded-full bg-purple-500 hover:scale-110 transition shadow-lg"></button>
-                <button onclick="setSystemColor('blue')" class="w-8 h-8 rounded-full bg-blue-500 hover:scale-110 transition shadow-lg"></button>
-                <button onclick="setSystemColor('green')" class="w-8 h-8 rounded-full bg-emerald-500 hover:scale-110 transition shadow-lg"></button>
+            <div class="flex gap-4 p-2 bg-white/5 rounded-full border border-white/10">
+                <button onclick="setSystemColor('yellow', 'ADHD / DOPAMINE')" class="w-10 h-10 rounded-full bg-amber-400 hover:scale-110 transition shadow-xl"></button>
+                <button onclick="setSystemColor('red', 'BPD / FLOODING')" class="w-10 h-10 rounded-full bg-red-500 hover:scale-110 transition shadow-xl"></button>
+                <button onclick="setSystemColor('orange', 'CPTSD / SHADOW')" class="w-10 h-10 rounded-full bg-orange-500 hover:scale-110 transition shadow-xl"></button>
+                <button onclick="setSystemColor('purple', 'GAD / PRESSURE')" class="w-10 h-10 rounded-full bg-purple-500 hover:scale-110 transition shadow-xl"></button>
+                <button onclick="setSystemColor('blue', 'MDD / GRAVITY')" class="w-10 h-10 rounded-full bg-blue-500 hover:scale-110 transition shadow-xl"></button>
+                <button onclick="setSystemColor('green', 'STABLE / SIGNAL')" class="w-10 h-10 rounded-full bg-emerald-500 hover:scale-110 transition shadow-xl"></button>
             </div>
 
-            <div class="flex gap-10 text-[11px] font-black uppercase tracking-[0.4em] opacity-50">
+            <div class="flex gap-12 text-[12px] font-black uppercase tracking-[0.5em] opacity-40">
                 <button onclick="switchTab('library')" class="hover:text-amber-400 hover:opacity-100 transition">Library</button>
                 <button onclick="switchTab('archives')" class="hover:text-amber-400 hover:opacity-100 transition">Archives</button>
                 <button onclick="switchTab('terminal')" class="hover:text-amber-400 hover:opacity-100 transition">Terminal</button>
@@ -59,48 +60,57 @@
             state: 'yellow',
             tab: 'library',
             
-            // WEAVING BOOK 1: Architect / Rachel Document
-            bookArchitect: {
+            // FULL BOOK 1: ARCHITECT OS / BEE WELL (TECHNICAL)
+            book1: {
                 title: "Architect OS: The Operating System",
+                subtitle: "Volume I: Technical Navigation",
+                color: "indigo-400",
                 chapters: [
-                    { id: 1, title: "The Symptom Soup", content: "The complex mind does not experience challenges in isolation; it lives within a 'Symptom Soup' where neurological and emotional currents overlap. Restlessness may be the precursor to anxiety, or emotional flooding leads to a dissociative freeze." },
-                    { id: 2, title: "The Anatomy of Shutdown", content: "Shutdown is not a failure of will; it is a biological 'Evacuation' protocol. The Pilot (Prefrontal Cortex) goes offline to preserve resources. Recognizing this is the first step in de-escalating the alarm." },
-                    { id: 33, title: "The Architect's Creed", content: "I do not fight my nature—I design for it. I am the Pilot of a complex craft, and while I cannot control the weather, I possess the tools to navigate it. One pebble, one breath, one step." }
+                    { id: 1, title: "The Symptom Soup", state: "purple", content: "The complex mind lives within a 'Symptom Soup' where neurological currents overlap. Restlessness is a precursor to anxiety; emotional flooding leads to freeze. We map these intersections to move from victimhood to navigation." },
+                    { id: 2, title: "The Anatomy of Shutdown", state: "blue", content: "Shutdown is a biological 'Evacuation' protocol. The Pilot (Prefrontal Cortex) goes offline to preserve resources, causing the 'White Fog' of dissociation. Recognizing this is the first step in de-escalation." },
+                    { id: 5, title: "The Prime Directive", state: "yellow", content: "Fix the State, then take the Step. You cannot access the Pilot when the system is in Survival Mode. If the state is Yellow (ADHD), the action is to reduce input. If Red (BPD), the action is physical shock." },
+                    { id: 10, title: "External Scaffolding", state: "green", content: "The Support Grid (therapists, doctors, friends) acts as an 'External Pilot' when your own system has evacuated the cockpit. This is not a failure of design; it is a part of the design." },
+                    { id: 33, title: "The Architect's Creed", state: "green", content: "I do not fight my nature—I design for it. I am the Pilot of a complex craft. While I cannot control the weather, I possess the tools to navigate it. One pebble, one breath, one step." }
                 ]
             },
 
-            // WEAVING BOOK 2: Journey to Zion / Paul Hummel
-            bookZion: {
-                title: "Bleeding Through the Page: Journey to Zion",
+            // FULL BOOK 2: JOURNEY TO ZION (SPIRITUAL)
+            book2: {
+                title: "Bleeding Through the Page",
+                subtitle: "Volume II: The Journey to Zion",
+                color: "amber-400",
                 chapters: [
-                    { id: 1, title: "The Black Room", content: "I was a 'paralyzed being' trapped in a black room, carrying 100 pounds of dead weight and watching my life bleed through the page of a corrupted tomorrow." },
-                    { id: 15, title: "November 29: The Snap", content: "The Snap is the moment of divine intervention. The laughing pills went silent and the Sanity Ring began to chime. It is the repositioning of motion—trading a heart of stone for a heart of flesh." },
-                    { id: 19, title: "The War Room of Zion", content: "Zion is the radiant height of spiritual authority. We move from the miry clay to the War Room, retaking the land and establishing the Mind of Christ." }
+                    { id: 1, title: "The Black Room", state: "blue", content: "A paralyzed being trapped in a black room, watching life bleed through the page of a corrupted tomorrow. 100 pounds of dead weight, a body in shambles, a bum with no hope." },
+                    { id: 6, title: "The Pills are Laughing", state: "red", content: "The intersection of chemical silence and spiritual healing. The realization that the medicine was a bandage, but the soul required a resurrection." },
+                    { id: 10, title: "The First Chime of Sanity", state: "orange", content: "A notion in the wild. The first time the hurricane of Bipolar 1 met the stillness of a divine frequency." },
+                    { id: 15, title: "November 29: The Snap", state: "yellow", content: "The moment of divine intervention. The laughing pills went silent. The Sanity Ring began to chime. Trading a heart of stone for a heart of flesh." },
+                    { id: 19, title: "The War Room of Zion", state: "green", content: "Retaking the land. Establishing the Mind of Christ. Moving from the miry clay to the radiant heights of spiritual authority." }
                 ]
             },
 
             archives: [
-                { id: "A1", title: "Atmospheric Calibration", tags: ["Medication", "Logic"], content: "Medication is not a 'fix' but a calibration of the internal atmosphere to allow the Pilot to remain in the cockpit longer." },
-                { id: "A2", title: "External Scaffolding", tags: ["Support", "Design"], content: "The Support Grid (therapists, doctors, friends) acts as an External Pilot when your own system has evacuated." }
+                { id: "S1", title: "Safety Mode Brain Fog", tags: ["ADHD", "CPTSD"], content: "When stress spikes, the prefrontal cortex shuts down. You lose words and feel 'blank' during high-stakes calls." },
+                { id: "S4", title: "Emotional Hyper-Arousal", tags: ["BPD", "Regulation"], content: "The 'No Brakes' feeling. Small setbacks trigger explosions of frustration, making you want to abandon the system." }
             ],
 
             corrections: {
-                yellow: "Fix the State: ADHD / Dopamine Gap. One Fox focus.",
-                red: "Fix the State: BPD / Emotional Flood. Cold water shock.",
-                orange: "Fix the State: CPTSD / Shadow. 5-4-3-2-1 Grounding.",
-                purple: "Fix the State: GAD / High Pressure. Brain dump to paper.",
-                blue: "Fix the State: MDD / Gravity. Micro-physical movement.",
-                green: "State Clear: Optimal Signal. Execute the Great Fox."
+                yellow: "ADHD / DOPAMINE: One Fox focus. Reduce input.",
+                red: "BPD / FLOOD: Cold water physical shock. Stillness.",
+                orange: "CPTSD / SHADOW: 5-4-3-2-1 Grounding sequence.",
+                purple: "GAD / PRESSURE: Externalize. Brain dump to paper.",
+                blue: "MDD / GRAVITY: Micro-physical movement only.",
+                green: "OPTIMAL SIGNAL: Execute the Great Fox."
             }
         };
 
         function switchTab(t) { ARCHITECT_DB.tab = t; render(); }
 
-        function setSystemColor(c) {
+        function setSystemColor(c, label) {
             ARCHITECT_DB.state = c;
             const colors = { yellow: '#fbbf24', red: '#f87171', orange: '#fb923c', purple: '#a855f7', blue: '#3b82f6', green: '#10b981' };
             document.getElementById('state-indicator').style.backgroundColor = colors[c];
             document.getElementById('blob1').style.backgroundColor = colors[c];
+            document.getElementById('system-status').innerText = `SYSTEM STATUS: ${label || ARCHITECT_DB.corrections[c]}`;
             render();
         }
 
@@ -109,35 +119,25 @@
             
             if(ARCHITECT_DB.tab === 'library') {
                 vp.innerHTML = `
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in duration-700">
-                        <div class="glass p-10 rounded-[3rem] border-t-4 border-indigo-500/30">
-                            <h2 class="text-xs uppercase tracking-[0.5em] opacity-30 mb-4">Volume I: Navigation</h2>
-                            <h3 class="text-3xl font-black mb-6 uppercase italic">${ARCHITECT_DB.bookArchitect.title}</h3>
-                            <div class="space-y-3">
-                                ${ARCHITECT_DB.bookArchitect.chapters.map(ch => `
-                                    <button onclick="openDoc('${ch.title}', '${ch.content}')" class="w-full text-left p-4 rounded-2xl hover:bg-white/5 border border-white/5 transition flex justify-between items-center group">
-                                        <span class="text-sm font-bold opacity-60 group-hover:opacity-100 group-hover:text-indigo-400">CH ${ch.id}: ${ch.title}</span>
-                                        <span class="text-[10px] opacity-20">→</span>
-                                    </button>
-                                `).join('')}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10 animate-in fade-in duration-1000">
+                        ${[ARCHITECT_DB.book1, ARCHITECT_DB.book2].map(book => `
+                            <div class="glass p-10 rounded-[3.5rem] border-t-8 border-${book.color}/20 relative overflow-hidden">
+                                <div class="absolute top-0 right-0 p-8 opacity-5 text-8xl font-black italic">VOL</div>
+                                <h2 class="text-xs uppercase tracking-[0.6em] opacity-30 mb-4">${book.subtitle}</h2>
+                                <h3 class="text-4xl font-black mb-10 uppercase italic leading-tight ${book.color === 'amber-400' ? 'zion-text' : ''}">${book.title}</h3>
+                                <div class="space-y-4">
+                                    ${book.chapters.map(ch => `
+                                        <button onclick="openChapter('${book.title}', ${ch.id})" class="chapter-node w-full text-left p-5 rounded-2xl bg-white/[0.02] border border-white/5 transition flex justify-between items-center group">
+                                            <div class="flex items-center gap-4">
+                                                <span class="text-[10px] font-bold opacity-20 group-hover:opacity-100">CH ${ch.id}</span>
+                                                <span class="text-sm font-bold opacity-60 group-hover:opacity-100 group-hover:translate-x-2 transition">${ch.title}</span>
+                                            </div>
+                                            <div class="w-2 h-2 rounded-full bg-${ch.state === 'yellow' ? 'amber-400' : ch.state + '-500'} opacity-30"></div>
+                                        </button>
+                                    `).join('')}
+                                </div>
                             </div>
-                        </div>
-
-                        <div class="glass p-10 rounded-[3rem] border-t-4 border-amber-500/30">
-                            <h2 class="text-xs uppercase tracking-[0.5em] opacity-30 mb-4">Volume II: Spirit</h2>
-                            <h3 class="text-3xl font-black zion-gold mb-6 uppercase italic">${ARCHITECT_DB.bookZion.title}</h3>
-                            <div class="space-y-3">
-                                ${ARCHITECT_DB.bookZion.chapters.map(ch => `
-                                    <button onclick="openDoc('${ch.title}', '${ch.content}')" class="w-full text-left p-4 rounded-2xl hover:bg-white/5 border border-white/5 transition flex justify-between items-center group">
-                                        <span class="text-sm font-bold opacity-60 group-hover:opacity-100 group-hover:text-amber-400">CH ${ch.id}: ${ch.title}</span>
-                                        <span class="text-[10px] opacity-20">→</span>
-                                    </button>
-                                `).join('')}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mt-8 glass p-6 rounded-2xl text-center">
-                        <p class="text-xs tracking-[0.6em] opacity-30 uppercase">System Status: ${ARCHITECT_DB.corrections[ARCHITECT_DB.state]}</p>
+                        `).join('')}
                     </div>
                 `;
             }
@@ -147,11 +147,11 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-in zoom-in-95 duration-700">
                         ${ARCHITECT_DB.archives.map(doc => `
                             <div class="glass p-8 rounded-3xl hover:border-white/20 transition group cursor-pointer" onclick="openDoc('${doc.title}', '${doc.content}')">
-                                <div class="flex gap-2 mb-4">
-                                    ${doc.tags.map(t => `<span class="text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-white/5 border border-white/10 opacity-40">${t}</span>`).join('')}
+                                <div class="flex gap-2 mb-6">
+                                    ${doc.tags.map(t => `<span class="text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-white/5 border border-white/10 opacity-30">${t}</span>`).join('')}
                                 </div>
-                                <h3 class="text-xl font-black uppercase italic mb-3 group-hover:text-amber-400">${doc.title}</h3>
-                                <p class="text-sm opacity-40 line-clamp-3 leading-relaxed">${doc.content}</p>
+                                <h3 class="text-xl font-black uppercase italic mb-4 group-hover:text-amber-400 transition">${doc.title}</h3>
+                                <p class="text-sm opacity-40 leading-relaxed line-clamp-4">${doc.content}</p>
                             </div>
                         `).join('')}
                     </div>
@@ -160,31 +160,39 @@
 
             if(ARCHITECT_DB.tab === 'terminal') {
                 vp.innerHTML = `
-                    <div class="glass rounded-[3rem] p-10 min-h-[550px] terminal-text flex flex-col shadow-2xl">
-                        <div class="flex-1 overflow-y-auto custom-scroll mb-6 opacity-80 space-y-2 text-sm" id="t-out">
-                            <div class="opacity-30 tracking-[0.2em]">[SYSTEM INITIALIZED]</div>
-                            <div class="opacity-30 tracking-[0.2em]">[LOGGING FROM ZION & ARCHITECT]</div>
-                            <div class="mt-4">Welcome, Pilot. Type /help to begin command sequence.</div>
+                    <div class="glass rounded-[3rem] p-10 min-h-[600px] flex flex-col shadow-2xl border border-white/10">
+                        <div class="flex-1 overflow-y-auto custom-scroll mb-8 opacity-70 font-mono text-xs space-y-3" id="t-out">
+                            <div class="text-indigo-400">[SYSTEM] ARCHITECT CORE v2.0.4 ONLINE</div>
+                            <div class="text-amber-400">[DATA] ZION REGISTRY LOADED (NOVEMBER 29 SNAP DETECTED)</div>
+                            <div class="pt-4 text-emerald-400">Welcome, Pilot. Command the Storm. Type /help for directory.</div>
                         </div>
-                        <div class="flex gap-4 items-center border-t border-white/10 pt-6">
-                            <span class="text-amber-500 font-bold tracking-widest animate-pulse">CMD_</span>
-                            <input type="text" class="bg-transparent border-none outline-none w-full uppercase tracking-[0.2em] text-sm" 
-                                   placeholder="awaiting input..." onkeydown="if(event.key==='Enter'){ document.getElementById('t-out').innerHTML += '<div>> ' + this.value + '</div>'; this.value=''; }">
+                        <div class="flex gap-6 items-center border-t border-white/5 pt-8">
+                            <span class="text-amber-500 font-bold tracking-widest animate-pulse font-mono">PILOT_CMD ></span>
+                            <input type="text" class="bg-transparent border-none outline-none w-full uppercase tracking-[0.3em] text-sm font-mono" 
+                                   placeholder="awaiting instruction..." onkeydown="if(event.key==='Enter'){ document.getElementById('t-out').innerHTML += '<div class=\'text-white opacity-40\'>// ' + this.value + '</div>'; this.value=''; }">
                         </div>
                     </div>
                 `;
             }
         }
 
+        function openChapter(bookTitle, chId) {
+            const book = bookTitle.includes("Architect") ? ARCHITECT_DB.book1 : ARCHITECT_DB.book2;
+            const ch = book.chapters.find(c => c.id === chId);
+            setSystemColor(ch.state, `ACTIVE CHAPTER: ${ch.title}`);
+            openDoc(ch.title, ch.content);
+        }
+
         function openDoc(title, content) {
             const vp = document.getElementById('app-viewport');
             vp.innerHTML = `
-                <div class="glass p-10 md:p-20 rounded-[4rem] animate-in fade-in slide-in-from-bottom-10 duration-1000 max-w-5xl mx-auto shadow-2xl border border-white/10">
-                    <button onclick="render()" class="mb-12 opacity-20 hover:opacity-100 transition text-[10px] font-black tracking-[0.5em] uppercase border border-white/20 px-6 py-2 rounded-full">← Return to System</button>
-                    <h1 class="text-5xl font-black italic tracking-tighter mb-10 text-white uppercase leading-tight">${title}</h1>
-                    <div class="text-2xl leading-[1.6] opacity-70 space-y-8 font-light tracking-wide">
-                        ${content}
+                <div class="glass p-10 md:p-24 rounded-[4.5rem] animate-in fade-in slide-in-from-bottom-20 duration-1000 max-w-5xl mx-auto shadow-2xl border border-white/10 relative">
+                    <button onclick="render()" class="mb-16 opacity-20 hover:opacity-100 transition text-[10px] font-black tracking-[0.6em] uppercase border border-white/20 px-8 py-3 rounded-full hover:bg-white/5">← EXIT TO OS</button>
+                    <h1 class="text-6xl font-black italic tracking-tighter mb-12 text-white uppercase leading-none">${title}</h1>
+                    <div class="text-2xl leading-[1.7] opacity-60 space-y-10 font-light tracking-wide italic">
+                        "${content}"
                     </div>
+                    <div class="mt-20 pt-10 border-t border-white/5 text-[10px] tracking-[0.5em] opacity-20 uppercase">End of Transmission</div>
                 </div>
             `;
             window.scrollTo({ top: 0, behavior: 'smooth' });
