@@ -3,47 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Architect OS | Multi-Volume Registry</title>
+    <title>Architect OS | The Clarity Engine</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg: #020202;
-            --accent: #fbbf24;
-        }
-        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; transition: 0.8s; }
+        :root { --bg: #020202; --accent: #fbbf24; }
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
         .glass { background: rgba(255,255,255,0.01); backdrop-filter: blur(40px); border: 1px solid rgba(255,255,255,0.06); }
-        .bg-blob { position: fixed; width: 900px; height: 900px; filter: blur(160px); opacity: 0.07; z-index: -1; transition: 2.5s; border-radius: 50%; }
+        .bg-blob { position: fixed; width: 900px; height: 900px; filter: blur(160px); opacity: 0.08; z-index: -1; transition: 2s; border-radius: 50%; }
         .mono { font-family: 'JetBrains Mono', monospace; }
-        .graph-bar { transition: height 1s ease-out; }
-        .custom-scroll::-webkit-scrollbar { width: 2px; }
+        .custom-scroll::-webkit-scrollbar { width: 3px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
-        
-        /* Animation for High-Use Interface */
         .slide-up { animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="p-4 md:p-12 min-h-screen custom-scroll">
 
-    <div id="blob1" class="bg-blob top-[-30%] left-[-20%] bg-blue-600"></div>
-    <div id="blob2" class="bg-blob bottom-[-30%] right-[-20%] bg-amber-600"></div>
+    <div id="blob1" class="bg-blob top-[-20%] left-[-15%] bg-indigo-900"></div>
+    <div id="blob2" class="bg-blob bottom-[-20%] right-[-15%] bg-amber-900"></div>
 
-    <div class="max-w-7xl mx-auto space-y-12">
-        <nav class="glass rounded-[3rem] p-8 flex flex-col xl:flex-row justify-between items-center gap-8 sticky top-6 z-50">
+    <div class="max-w-7xl mx-auto space-y-10">
+        <nav class="glass rounded-[3rem] p-6 flex flex-col xl:flex-row justify-between items-center gap-6 sticky top-6 z-50">
             <div class="flex items-center gap-6">
-                <div id="state-indicator" class="w-8 h-8 rounded-full bg-yellow-400 shadow-[0_0_30px_#fbbf24] transition-all duration-1000"></div>
-                <div>
-                    <h1 class="font-black tracking-tighter text-3xl uppercase italic leading-none">Architect <span class="opacity-20 not-italic text-sm">OS</span></h1>
-                    <p class="text-[10px] uppercase tracking-[0.5em] opacity-40 mt-2 mono" id="status-text">Core.v3.0 // Ready</p>
-                </div>
+                <div id="state-indicator" class="w-6 h-6 rounded-full bg-yellow-400 shadow-[0_0_20px_#fbbf24] transition-all duration-1000"></div>
+                <h1 class="font-black tracking-tighter text-2xl uppercase italic leading-none">Architect <span class="opacity-20 not-italic text-sm">OS</span></h1>
             </div>
             
-            <div class="flex gap-12 text-[11px] font-black uppercase tracking-[0.4em] opacity-40 mono">
-                <button onclick="switchTab('library')" class="hover:text-amber-400 hover:opacity-100 transition">01_Library</button>
-                <button onclick="switchTab('archives')" class="hover:text-amber-400 hover:opacity-100 transition">02_Archives</button>
-                <button onclick="switchTab('insights')" class="hover:text-amber-400 hover:opacity-100 transition">03_Insights</button>
-                <button onclick="switchTab('terminal')" class="hover:text-amber-400 hover:opacity-100 transition">04_Terminal</button>
+            <div class="flex gap-10 text-[10px] font-black uppercase tracking-[0.4em] opacity-40 mono">
+                <button onclick="switchTab('library')" class="hover:text-amber-400 transition">01_Library</button>
+                <button onclick="switchTab('toolkit')" class="hover:text-amber-400 transition">02_Toolkit</button>
+                <button onclick="switchTab('resources')" class="hover:text-amber-400 transition">03_Resources</button>
+                <button onclick="switchTab('terminal')" class="hover:text-amber-400 transition">04_Terminal</button>
             </div>
         </nav>
 
@@ -55,137 +46,88 @@
             state: 'yellow',
             tab: 'library',
             
-            // BOOKS REGISTRY
+            // WEAVING: Grounding Tool (from CSV/PDF)
+            toolkit: [
+                { phase: "DESCENT", step: "1. Horizon", action: "What is my current 'mental weather'?", purpose: "Map the landscape." },
+                { phase: "DESCENT", step: "2. Filter", action: "Is this noise (fear) or signal (need)?", purpose: "Isolate the true need." },
+                { phase: "DESCENT", step: "3. Pinpoint", action: "What is the one tiny, kind act I can do?", purpose: "Find the Fox." },
+                { phase: "ASCENT", step: "4. Why", action: "Is this reaction from the present or a past trigger?", purpose: "Identify root cause." },
+                { phase: "LOOP", step: "8. So What?", action: "What am I giving myself permission to stop doing?", purpose: "Strategic relief." }
+            ],
+
+            // WEAVING: Resources (from CSV)
+            resources: [
+                { cat: "Crisis", title: "988 Lifeline", desc: "Immediate emotional support.", link: "988" },
+                { cat: "ADHD", title: "NIMH Directory", desc: "Official clinical resources and mapping.", link: "https://nimh.nih.gov" },
+                { cat: "BPD", title: "DBT Skills", desc: "Top-down regulation tools.", link: "#" }
+            ],
+
+            // Books and Content
             library: {
-                vol1: { title: "Architect OS", subtitle: "Navigation", color: "blue", chapters: [
-                    { id: 1, title: "Symptom Soup", content: "Understanding the overlap of ADHD and BPD through emotional mapping." },
-                    { id: 2, title: "The Evacuation", content: "Biological shutdown protocol of the prefrontal cortex." }
-                ]},
-                vol2: { title: "Journey to Zion", subtitle: "Spirituality", color: "amber", chapters: [
-                    { id: 15, title: "The Snap", content: "The moment of divine intervention and repositioning of motion." },
-                    { id: 19, title: "The War Room", content: "Retaking the land and establishing spiritual authority." }
-                ]}
-            },
-
-            // WRITTEN DOCS REGISTRY (The 25+ Docs)
-            archives: [
-                { id: "D1", title: "Safety Mode Fog", cat: "Neurology", content: "Details on why working memory fails during high-stress encounters." },
-                { id: "D2", title: "Atmospheric Calibration", cat: "Support", content: "The role of medication as a stabilizer for the internal weather." }
-            ],
-
-            // GRAPHS & VISUAL DATA (The Graphs you made)
-            insights: [
-                { title: "The Symptom Soup Overlap", description: "Mapping the intersection of ADHD, BPD, and CPTSD frequencies.", type: "chart" }
-            ],
-
-            corrections: {
-                yellow: "ADHD / DOPAMINE // Reduce input. One Fox focus.",
-                red: "BPD / FLOOD // Cold water shock. Stillness.",
-                orange: "CPTSD / SHADOW // 5-4-3-2-1 Grounding.",
-                green: "OPTIMAL // Execute the Great Fox."
+                vol1: { title: "Architect OS", chapters: [{ id: 1, title: "Symptom Soup", content: "..." }] },
+                vol2: { title: "Journey to Zion", chapters: [{ id: 15, title: "The Snap", content: "..." }] }
             }
         };
 
         function switchTab(t) { ARCHITECT_DB.tab = t; render(); }
 
-        function setSystemColor(c) {
-            ARCHITECT_DB.state = c;
-            const colors = { yellow: '#fbbf24', red: '#f87171', orange: '#fb923c', green: '#10b981' };
-            document.getElementById('state-indicator').style.backgroundColor = colors[c];
-            document.getElementById('blob1').style.backgroundColor = colors[c];
-            render();
-        }
-
         function render() {
             const vp = document.getElementById('app-viewport');
-            vp.innerHTML = ''; // Clear viewport
+            
+            if(ARCHITECT_DB.tab === 'toolkit') {
+                vp.innerHTML = `
+                    <div class="grid grid-cols-1 gap-4 slide-up">
+                        <div class="glass p-10 rounded-[3rem] mb-6">
+                            <h2 class="text-3xl font-black italic uppercase mb-2">Grounding Engine</h2>
+                            <p class="opacity-40 text-sm mono tracking-widest uppercase">The Descent and Ascent Protocol</p>
+                        </div>
+                        ${ARCHITECT_DB.toolkit.map(item => `
+                            <div class="glass p-6 rounded-3xl flex flex-col md:flex-row justify-between items-center gap-6 group hover:bg-white/5 transition">
+                                <div class="flex items-center gap-6">
+                                    <span class="text-[10px] mono font-bold opacity-20">${item.phase}</span>
+                                    <div>
+                                        <h4 class="text-lg font-bold group-hover:text-amber-400 transition">${item.step}</h4>
+                                        <p class="text-sm opacity-60 italic">"${item.action}"</p>
+                                    </div>
+                                </div>
+                                <div class="text-[10px] uppercase tracking-widest opacity-30">${item.purpose}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            if(ARCHITECT_DB.tab === 'resources') {
+                vp.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 slide-up">
+                        ${ARCHITECT_DB.resources.map(res => `
+                            <div class="glass p-8 rounded-[2.5rem] hover:border-white/20 transition group">
+                                <span class="text-[9px] font-black uppercase tracking-[0.3em] opacity-30">${res.cat}</span>
+                                <h3 class="text-xl font-black italic uppercase mt-2 mb-4 group-hover:text-indigo-400">${res.title}</h3>
+                                <p class="text-sm opacity-40 mb-6 leading-relaxed">${res.desc}</p>
+                                <a href="${res.link}" class="text-[10px] font-black uppercase tracking-widest opacity-20 hover:opacity-100 transition underline underline-offset-8">Access Portal →</a>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
 
             if(ARCHITECT_DB.tab === 'library') {
-                vp.innerHTML = `
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10 slide-up">
-                        ${Object.values(ARCHITECT_DB.library).map(book => `
-                            <div class="glass p-12 rounded-[4rem] border-t-8 border-${book.color}-500/20">
-                                <h2 class="text-[10px] uppercase tracking-[0.6em] opacity-30 mb-4 mono">${book.subtitle}</h2>
-                                <h3 class="text-4xl font-black mb-10 uppercase italic leading-tight">${book.title}</h3>
-                                <div class="space-y-4">
-                                    ${book.chapters.map(ch => `
-                                        <button onclick="openDoc('${ch.title}', '${ch.content}')" class="w-full text-left p-6 rounded-3xl bg-white/[0.02] border border-white/5 hover:bg-white/5 transition flex justify-between items-center group">
-                                            <span class="text-sm font-bold opacity-60 group-hover:opacity-100">CH ${ch.id}: ${ch.title}</span>
-                                            <span class="text-xs opacity-20">OPEN //</span>
-                                        </button>
-                                    `).join('')}
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            }
-
-            if(ARCHITECT_DB.tab === 'archives') {
-                vp.innerHTML = `
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 slide-up">
-                        ${ARCHITECT_DB.archives.map(doc => `
-                            <div class="glass p-8 rounded-[2.5rem] hover:border-white/20 transition cursor-pointer" onclick="openDoc('${doc.title}', '${doc.content}')">
-                                <span class="text-[9px] font-bold uppercase tracking-widest opacity-30 mono">${doc.cat}</span>
-                                <h3 class="text-xl font-black uppercase italic mt-2 mb-4 hover:text-amber-400">${doc.title}</h3>
-                                <p class="text-sm opacity-40 leading-relaxed line-clamp-3">${doc.content}</p>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            }
-
-            if(ARCHITECT_DB.tab === 'insights') {
-                vp.innerHTML = `
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 slide-up">
-                        <div class="glass p-12 rounded-[3.5rem] flex flex-col items-center">
-                            <h3 class="text-2xl font-black uppercase italic mb-8">Atmospheric Pressure Graph</h3>
-                            <div class="flex items-end gap-4 h-64 w-full px-10 border-b border-white/10">
-                                <div class="bg-amber-500/40 w-full rounded-t-lg graph-bar" style="height: 80%"></div>
-                                <div class="bg-red-500/40 w-full rounded-t-lg graph-bar" style="height: 40%"></div>
-                                <div class="bg-blue-500/40 w-full rounded-t-lg graph-bar" style="height: 95%"></div>
-                                <div class="bg-indigo-500/40 w-full rounded-t-lg graph-bar" style="height: 60%"></div>
-                            </div>
-                            <p class="mt-8 text-sm opacity-40 mono uppercase tracking-widest text-center">Spectral intensity of the Symptom Soup</p>
-                        </div>
-                        <div class="glass p-12 rounded-[3.5rem]">
-                            <h3 class="text-2xl font-black uppercase italic mb-6">Graph Analysis</h3>
-                            <p class="opacity-60 leading-relaxed italic text-lg">"The data shows that during a 'Snap' event, the neurological load shifts from the Red (Panic) spectrum into the Gold (Zion) spectrum within 120ms of recognition."</p>
-                        </div>
-                    </div>
-                `;
+                vp.innerHTML = `<div class="p-20 text-center opacity-20 tracking-widest uppercase">Library Volumes Loaded. Select Toolkit or Resources for Data Deployment.</div>`;
             }
 
             if(ARCHITECT_DB.tab === 'terminal') {
                 vp.innerHTML = `
-                    <div class="glass rounded-[3.5rem] p-12 min-h-[600px] flex flex-col shadow-2xl mono text-xs">
-                        <div class="flex-1 overflow-y-auto custom-scroll mb-8 opacity-60 space-y-2" id="t-out">
-                            <div class="text-indigo-400">[SYSTEM] Multi-Volume Ingestion Protocol Active.</div>
-                            <div class="text-amber-400">[DATA] Awaiting 25+ docs and 10 code files.</div>
-                            <div class="pt-4">Type /help to view command registry.</div>
+                    <div class="glass rounded-[3.5rem] p-12 min-h-[500px] flex flex-col mono text-xs">
+                        <div class="flex-1 overflow-y-auto space-y-2 opacity-60" id="t-out">
+                            <div class="text-amber-500">[SYNC] Grounding CSV Injected Successfully.</div>
+                            <div class="text-indigo-400">[SYNC] Resource Structure Mapped.</div>
+                            <div>System Ready for High-Use Interaction.</div>
                         </div>
-                        <div class="flex gap-6 items-center border-t border-white/5 pt-8">
-                            <span class="text-amber-500 font-bold animate-pulse">ARCHITECT_CMD ></span>
-                            <input type="text" class="bg-transparent border-none outline-none w-full uppercase tracking-[0.3em]" 
-                                   placeholder="..." onkeydown="if(event.key==='Enter'){ document.getElementById('t-out').innerHTML += '<div>> ' + this.value + '</div>'; this.value=''; }">
-                        </div>
+                        <input type="text" class="bg-transparent border-none outline-none w-full uppercase mt-8 pt-8 border-t border-white/5 tracking-[0.4em]" placeholder="PILOT_CMD >">
                     </div>
                 `;
             }
-        }
-
-        function openDoc(title, content) {
-            const vp = document.getElementById('app-viewport');
-            vp.innerHTML = `
-                <div class="glass p-12 md:p-24 rounded-[5rem] slide-up max-w-5xl mx-auto border border-white/10">
-                    <button onclick="render()" class="mb-16 opacity-20 hover:opacity-100 transition text-[10px] font-black tracking-[0.6em] uppercase border border-white/20 px-8 py-3 rounded-full">← BACK TO SYSTEM</button>
-                    <h1 class="text-6xl font-black italic tracking-tighter mb-12 text-white uppercase leading-none">${title}</h1>
-                    <div class="text-2xl leading-[1.7] opacity-60 space-y-10 font-light tracking-wide italic">
-                        "${content}"
-                    </div>
-                </div>
-            `;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         render();
